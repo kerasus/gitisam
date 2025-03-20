@@ -3,6 +3,8 @@
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\AuthController;
+use App\Http\Controllers\Api\UserController;
+use App\Http\Controllers\Api\BuildingController;
 
 /*
 |--------------------------------------------------------------------------
@@ -24,6 +26,10 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/user', function (Request $request) {
         return $request->user();
     });
+
+    Route::resource('users', '\\'.UserController::class);
+    Route::resource('buildings', '\\'.BuildingController::class);
+
     Route::post('/logout', [AuthController::class, 'logout']);
     Route::post('/send-verification-code', [AuthController::class, 'sendVerificationCode']);
     Route::post('/verify-mobile', [AuthController::class, 'verifyMobile']);
