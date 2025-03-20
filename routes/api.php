@@ -7,6 +7,7 @@ use App\Http\Controllers\Api\UserController;
 use App\Http\Controllers\Api\UnitController;
 use App\Http\Controllers\Api\InvoiceController;
 use App\Http\Controllers\Api\BuildingController;
+use App\Http\Controllers\Api\TransactionController;
 use App\Http\Controllers\Api\InvoiceTypeController;
 use App\Http\Controllers\Api\InvoiceDistributionController;
 
@@ -36,6 +37,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::resource('invoices', '\\'.InvoiceController::class);
     Route::resource('buildings', '\\'.BuildingController::class);
     Route::resource('invoice-types', '\\'.InvoiceTypeController::class);
+    Route::resource('transactions', '\\' . TransactionController::class);
     Route::resource('invoice-distributions', '\\'.InvoiceDistributionController::class);
 
     Route::post('/logout', [AuthController::class, 'logout']);
