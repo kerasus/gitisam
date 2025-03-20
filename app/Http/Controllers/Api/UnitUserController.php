@@ -2,11 +2,11 @@
 
 namespace App\Http\Controllers\Api;
 
-use App\Models\Unit;
 use App\Traits\Filter;
+use App\Models\UnitUser;
 use App\Traits\CommonCRUD;
 use Illuminate\Http\Request;
-use Illuminate\Http\Response;
+use Illuminate\Http\JsonResponse;
 use App\Http\Controllers\Controller;
 
 class UnitUserController extends Controller
@@ -23,88 +23,184 @@ class UnitUserController extends Controller
      * Display all users assigned to a specific unit.
      *
      * @param Request $request
-     * @param int $unitId
-     * @return Response
+     * @return JsonResponse
      */
-    public function index(Request $request, $unitId)
+    public function index(Request $request)
     {
         $config = [
-            'filterKeys' => [
-                'name', 'username', 'email', 'mobile'
-            ],
             'filterRelationKeys'=> [
                 [
-                    'requestKey' => 'f_name',
-                    'relationName' => 'account.user',
-                    'relationColumn' => 'f_name'
+                    'requestKey' => 'unitUnitNumber',
+                    'relationName' => 'unit',
+                    'relationColumn' => 'unit_number'
                 ],
                 [
-                    'requestKey' => 'l_name',
-                    'relationName' => 'account.user',
-                    'relationColumn' => 'l_name'
+                    'requestKey' => 'unitType',
+                    'relationName' => 'unit',
+                    'relationColumn' => 'type'
                 ],
                 [
-                    'requestKey' => 'SSN',
-                    'relationName' => 'account.user',
-                    'relationColumn' => 'SSN'
+                    'requestKey' => 'unitArea',
+                    'relationName' => 'unit',
+                    'relationColumn' => 'area'
+                ],
+                [
+                    'requestKey' => 'unitFloor',
+                    'relationName' => 'unit',
+                    'relationColumn' => 'floor'
+                ],
+                [
+                    'requestKey' => 'unitNumberOfRooms',
+                    'relationName' => 'unit',
+                    'relationColumn' => 'number_of_rooms'
+                ],
+                [
+                    'requestKey' => 'unitParkingSpaces',
+                    'relationName' => 'unit',
+                    'relationColumn' => 'parking_spaces'
+                ],
+                [
+                    'requestKey' => 'unitResidentName',
+                    'relationName' => 'unit',
+                    'relationColumn' => 'resident_name'
+                ],
+                [
+                    'requestKey' => 'unitResidentPhone',
+                    'relationName' => 'unit',
+                    'relationColumn' => 'resident_phone'
+                ],
+                [
+                    'requestKey' => 'unitOwnerName',
+                    'relationName' => 'unit',
+                    'relationColumn' => 'owner_name'
+                ],
+                [
+                    'requestKey' => 'unitOwnerPhone',
+                    'relationName' => 'unit',
+                    'relationColumn' => 'owner_phone'
+                ],
+                [
+                    'requestKey' => 'userName',
+                    'relationName' => 'user',
+                    'relationColumn' => 'name'
+                ],
+                [
+                    'requestKey' => 'userEmail',
+                    'relationName' => 'user',
+                    'relationColumn' => 'email'
+                ],
+                [
+                    'requestKey' => 'userUsername',
+                    'relationName' => 'user',
+                    'relationColumn' => 'username'
+                ],
+                [
+                    'requestKey' => 'userMobile',
+                    'relationName' => 'user',
+                    'relationColumn' => 'mobile'
                 ]
             ],
             'eagerLoads' => [
-                'units' // Example relationship (if applicable)
-            ],
-            'setAppends' => [
-                // Add attributes to append here (if applicable)
+                'unit', 'user'
             ]
         ];
 
-        $unit = Unit::findOrFail($unitId);
-        $modelQuery = $unit->users()->getQuery(); // Get the query builder for the relationship
+        return $this->commonIndex($request, UnitUser::class, $config);
+    }
 
-        return $this->commonIndex($request, $modelQuery, $config);
+    /**
+     * Assign multiple users to specific units (bulk store).
+     *
+     * @param Request $request
+     * @return JsonResponse
+     */
+    public function bulkStore(Request $request)
+    {
+        $request->validate([
+            'assignments' => 'required|array',
+            'assignments.*.user_id' => 'required|exists:users,id',
+            'assignments.*.unit_id' => 'required|exists:units,id',
+        ]);
+
+        $assignments = $request->input('assignments');
+
+        // Create multiple UnitUser records
+        $createdRecords = UnitUser::insert(
+            array_map(function ($assignment) {
+                return [
+                    'user_id' => $assignment['user_id'],
+                    'unit_id' => $assignment['unit_id'],
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                ];
+            }, $assignments)
+        );
+
+        return $this->jsonResponseOk([
+            'message' => 'Bulk assignment created successfully',
+            'data' => $assignments,
+        ]);
     }
 
     /**
      * Assign a user to a specific unit.
      *
      * @param Request $request
-     * @param int $unitId
-     * @return Response
+     * @return JsonResponse
      */
-    public function store(Request $request, $unitId)
+    public function store(Request $request)
     {
         $request->validate([
             'user_id' => 'required|exists:users,id',
+            'unit_id' => 'required|exists:units,id',
         ]);
 
-        $unit = Unit::findOrFail($unitId);
-        $user = User::findOrFail($request->user_id);
-
-        // Attach the user to the unit
-        $unit->users()->syncWithoutDetaching([$user->id]);
-
-        return $this->jsonResponseOk([
-            'message' => 'User assigned to unit successfully',
-            'user' => $user,
-        ]);
+        return $this->commonStore($request, UnitUser::class);
     }
 
     /**
-     * Remove a user from a specific unit.
+     * Display the specified resource.
      *
-     * @param int $unitId
-     * @param int $userId
-     * @return Response
+     * @param int $id
+     * @return JsonResponse
      */
-    public function destroy($unitId, $userId)
+    public function show($id)
     {
-        $unit = Unit::findOrFail($unitId);
-        $user = User::findOrFail($userId);
+        $unitUser = UnitUser::with(['unit', 'user'])->findOrFail($id);
 
-        // Detach the user from the unit
-        $unit->users()->detach($user->id);
+        return $this->jsonResponseOk($unitUser);
+    }
 
-        return $this->jsonResponseOk([
-            'message' => 'User removed from unit successfully',
+    /**
+     * Update the specified resource in storage.
+     *
+     * @param Request $request
+     * @param int $id
+     * @return JsonResponse
+     */
+    public function update(Request $request, $id)
+    {
+
+        $unitUser = UnitUser::findOrFail($id);
+
+        $request->validate([
+            'user_id' => 'sometimes|required|exists:users,id',
+            'unit_id' => 'sometimes|required|exists:units,id',
         ]);
+
+        return $this->commonUpdate($request, $unitUser);
+    }
+
+    /**
+     * Remove the specified resource from storage.
+     *
+     * @param int $id
+     * @return JsonResponse
+     */
+    public function destroy($id)
+    {
+        $unitUser = UnitUser::findOrFail($id);
+
+        return $this->commonDestroy($unitUser);
     }
 }

@@ -6,7 +6,7 @@ use App\Models\Unit;
 use App\Traits\Filter;
 use App\Traits\CommonCRUD;
 use Illuminate\Http\Request;
-use Illuminate\Http\Response;
+use Illuminate\Http\JsonResponse;
 use App\Http\Controllers\Controller;
 
 class UnitController extends Controller
@@ -23,7 +23,7 @@ class UnitController extends Controller
      * Display a listing of the resource.
      *
      * @param Request $request
-     * @return Response
+     * @return JsonResponse
      */
     public function index(Request $request)
     {
@@ -33,9 +33,6 @@ class UnitController extends Controller
             ],
             'eagerLoads' => [
                 'building', 'images', 'users'
-            ],
-            'setAppends' => [
-                'custom_attribute' // Example appended attribute (if applicable)
             ]
         ];
 
@@ -46,7 +43,7 @@ class UnitController extends Controller
      * Store a newly created resource in storage.
      *
      * @param Request $request
-     * @return Response
+     * @return JsonResponse
      */
     public function store(Request $request)
     {
@@ -66,7 +63,7 @@ class UnitController extends Controller
      * Display the specified resource.
      *
      * @param int $id
-     * @return Response
+     * @return JsonResponse
      */
     public function show($id)
     {
@@ -80,7 +77,7 @@ class UnitController extends Controller
      *
      * @param Request $request
      * @param Unit $unit
-     * @return Response
+     * @return JsonResponse
      */
     public function update(Request $request, Unit $unit)
     {
@@ -100,7 +97,7 @@ class UnitController extends Controller
      * Remove the specified resource from storage.
      *
      * @param Unit $unit
-     * @return Response
+     * @return JsonResponse
      */
     public function destroy(Unit $unit)
     {
