@@ -25,7 +25,7 @@ class UnitUserController extends Controller
      * @param Request $request
      * @return JsonResponse
      */
-    public function index(Request $request)
+    public function index(Request $request): JsonResponse
     {
         $config = [
             'filterRelationKeys'=> [
@@ -114,7 +114,7 @@ class UnitUserController extends Controller
      * @param Request $request
      * @return JsonResponse
      */
-    public function bulkStore(Request $request)
+    public function bulkStore(Request $request): JsonResponse
     {
         $request->validate([
             'assignments' => 'required|array',
@@ -148,7 +148,7 @@ class UnitUserController extends Controller
      * @param Request $request
      * @return JsonResponse
      */
-    public function store(Request $request)
+    public function store(Request $request): JsonResponse
     {
         $request->validate([
             'user_id' => 'required|exists:users,id',
@@ -164,7 +164,7 @@ class UnitUserController extends Controller
      * @param int $id
      * @return JsonResponse
      */
-    public function show($id)
+    public function show($id): JsonResponse
     {
         $unitUser = UnitUser::with(['unit', 'user'])->findOrFail($id);
 
@@ -178,7 +178,7 @@ class UnitUserController extends Controller
      * @param int $id
      * @return JsonResponse
      */
-    public function update(Request $request, $id)
+    public function update(Request $request, int $id): JsonResponse
     {
 
         $unitUser = UnitUser::findOrFail($id);
@@ -197,7 +197,7 @@ class UnitUserController extends Controller
      * @param int $id
      * @return JsonResponse
      */
-    public function destroy($id)
+    public function destroy(int $id): JsonResponse
     {
         $unitUser = UnitUser::findOrFail($id);
 

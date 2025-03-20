@@ -6,7 +6,7 @@ use App\Models\User;
 use App\Traits\Filter;
 use App\Traits\CommonCRUD;
 use Illuminate\Http\Request;
-use Illuminate\Http\Response;
+use Illuminate\Http\JsonResponse;
 use App\Http\Controllers\Controller;
 
 class UserController extends Controller
@@ -23,19 +23,87 @@ class UserController extends Controller
      * Display a listing of the resource.
      *
      * @param Request $request
-     * @return Response
+     * @return JsonResponse
      */
-    public function index(Request $request)
+    public function index(Request $request): JsonResponse
     {
         $config = [
             'filterKeys' => [
                 'name', 'username', 'email', 'mobile'
             ],
-            'eagerLoads' => [
-                // Add relationships to eager load here (if applicable)
+            'filterRelationKeys' => [
+                // Filtering by related units (via unitUsers relationship)
+                [
+                    'requestKey' => 'unitUnitNumber',
+                    'relationName' => 'unitUsers',
+                    'relationColumn' => 'unit_number'
+                ],
+                [
+                    'requestKey' => 'unitType',
+                    'relationName' => 'unitUsers',
+                    'relationColumn' => 'type'
+                ],
+                [
+                    'requestKey' => 'unitArea',
+                    'relationName' => 'unitUsers',
+                    'relationColumn' => 'area'
+                ],
+                [
+                    'requestKey' => 'unitFloor',
+                    'relationName' => 'unitUsers',
+                    'relationColumn' => 'floor'
+                ],
+                [
+                    'requestKey' => 'unitNumberOfRooms',
+                    'relationName' => 'unitUsers',
+                    'relationColumn' => 'number_of_rooms'
+                ],
+                [
+                    'requestKey' => 'unitParkingSpaces',
+                    'relationName' => 'unitUsers',
+                    'relationColumn' => 'parking_spaces'
+                ],
+                [
+                    'requestKey' => 'unitResidentName',
+                    'relationName' => 'unitUsers',
+                    'relationColumn' => 'resident_name'
+                ],
+                [
+                    'requestKey' => 'unitResidentPhone',
+                    'relationName' => 'unitUsers',
+                    'relationColumn' => 'resident_phone'
+                ],
+                [
+                    'requestKey' => 'unitOwnerName',
+                    'relationName' => 'unitUsers',
+                    'relationColumn' => 'owner_name'
+                ],
+                [
+                    'requestKey' => 'unitOwnerPhone',
+                    'relationName' => 'unitUsers',
+                    'relationColumn' => 'owner_phone'
+                ],
+
+                // Filtering by related transactions
+                [
+                    'requestKey' => 'transactionAmount',
+                    'relationName' => 'transactions',
+                    'relationColumn' => 'amount'
+                ],
+                [
+                    'requestKey' => 'transactionPaymentMethod',
+                    'relationName' => 'transactions',
+                    'relationColumn' => 'payment_method'
+                ],
+                [
+                    'requestKey' => 'transactionStatus',
+                    'relationName' => 'transactions',
+                    'relationColumn' => 'transaction_status'
+                ]
             ],
-            'setAppends' => [
-                // Add attributes to append here (if applicable)
+            'eagerLoads' => [
+                'unitUsers',
+                'transactions'
             ]
         ];
 
@@ -46,9 +114,9 @@ class UserController extends Controller
      * Store a newly created resource in storage.
      *
      * @param Request $request
-     * @return Response
+     * @return JsonResponse
      */
-    public function store(Request $request)
+    public function store(Request $request): JsonResponse
     {
         $request->validate([
             'name' => 'required|string|max:255',
@@ -65,9 +133,9 @@ class UserController extends Controller
      * Display the specified resource.
      *
      * @param int $id
-     * @return Response
+     * @return JsonResponse
      */
-    public function show($id)
+    public function show(int $id): JsonResponse
     {
         $user = User::findOrFail($id);
 
@@ -79,9 +147,9 @@ class UserController extends Controller
      *
      * @param Request $request
      * @param User $user
-     * @return Response
+     * @return JsonResponse
      */
-    public function update(Request $request, User $user)
+    public function update(Request $request, User $user): JsonResponse
     {
         $request->validate([
             'name' => 'sometimes|required|string|max:255',
@@ -98,9 +166,9 @@ class UserController extends Controller
      * Remove the specified resource from storage.
      *
      * @param User $user
-     * @return Response
+     * @return JsonResponse
      */
-    public function destroy(User $user)
+    public function destroy(User $user): JsonResponse
     {
         return $this->commonDestroy($user);
     }

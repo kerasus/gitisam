@@ -2,11 +2,12 @@
 
 namespace App\Models;
 
-// use Illuminate\Contracts\Auth\MustVerifyEmail;
+use Laravel\Sanctum\HasApiTokens;
+use Illuminate\Notifications\Notifiable;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
-use Illuminate\Notifications\Notifiable;
-use Laravel\Sanctum\HasApiTokens;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 
 class User extends Authenticatable
 {
@@ -47,4 +48,21 @@ class User extends Authenticatable
         'mobile_verified_at' => 'datetime',
         'password' => 'hashed',
     ];
+
+    /**
+     * Relationship: A user can belong to many units (many-to-many).
+     */
+    public function unitUsers(): BelongsToMany
+    {
+        return $this->belongsToMany(Unit::class, 'unit_user')
+            ->withTimestamps();
+    }
+
+    /**
+     * Relationship: A user can have many transactions.
+     */
+    public function transactions(): HasMany
+    {
+        return $this->hasMany(Transaction::class);
+    }
 }
