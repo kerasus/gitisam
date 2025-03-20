@@ -13,16 +13,10 @@ return new class extends Migration
     {
         Schema::create('transactions', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('unit_id')
+            $table->foreignId('user_id')
                 ->nullable()
-                ->constrained('units')
+                ->constrained('users')
                 ->onDelete('set null');
-
-            $table->foreignId('invoice_distribution_id')
-                ->nullable()
-                ->constrained('invoice_distribution')
-                ->onDelete('set null');
-
 
             $table->decimal('amount', 10, 2);
             $table->string('receipt_image')->nullable();
@@ -59,7 +53,7 @@ return new class extends Migration
                 'organizational_unpaid'
             ])->default('unpaid')
                 ->comment('Status of the transaction (e.g., pending, successful)');
-            
+
             $table->timestamps();
         });
     }

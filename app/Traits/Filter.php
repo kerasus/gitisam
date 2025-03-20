@@ -3,11 +3,11 @@
 namespace App\Traits;
 
 use Carbon\Carbon;
-use Illuminate\Contracts\Routing\ResponseFactory;
-use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Database\Eloquent\Builder;
 
 trait Filter
 {
@@ -131,19 +131,33 @@ trait Filter
     }
 
     /**
-     * @param $response
-     * @return ResponseFactory|Response
+     * Return a successful JSON response.
+     *
+     * @param mixed $data
+     * @return JsonResponse
      */
-    private function jsonResponseOk($response) {
-        return response(json_encode($response), Response::HTTP_OK)->header('Content-Type', 'application/json');
+    private function jsonResponseOk($data): JsonResponse {
+        return response()->json($data, Response::HTTP_OK);
     }
 
-    private function jsonResponseValidateError($response) {
-        return response(json_encode($response), Response::HTTP_UNPROCESSABLE_ENTITY)->header('Content-Type', 'application/json');
+    /**
+     * Return a validation error JSON response.
+     *
+     * @param mixed $errors
+     * @return JsonResponse
+     */
+    private function jsonResponseValidateError($errors): JsonResponse {
+        return response()->json($errors, Response::HTTP_UNPROCESSABLE_ENTITY);
     }
 
-    private function jsonResponseServerError($response) {
-        return response(json_encode($response), Response::HTTP_INTERNAL_SERVER_ERROR)->header('Content-Type', 'application/json');
+    /**
+     * Return a server error JSON response.
+     *
+     * @param mixed $errors
+     * @return JsonResponse
+     */
+    private function jsonResponseServerError($errors): JsonResponse {
+        return response()->json($errors, Response::HTTP_INTERNAL_SERVER_ERROR);
     }
 
     private function checkOwner ($userOwnerId) {

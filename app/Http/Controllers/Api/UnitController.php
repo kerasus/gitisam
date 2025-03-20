@@ -32,7 +32,7 @@ class UnitController extends Controller
                 'name', 'floor', 'number'
             ],
             'eagerLoads' => [
-                'building' // Example relationship (if applicable)
+                'building', 'images', 'users'
             ],
             'setAppends' => [
                 'custom_attribute' // Example appended attribute (if applicable)

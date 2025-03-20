@@ -3,9 +3,8 @@
 namespace App\Traits;
 
 use Closure;
-use Illuminate\Contracts\Routing\ResponseFactory;
 use Illuminate\Http\Request;
-use Illuminate\Http\Response;
+use Illuminate\Http\JsonResponse;
 
 trait CommonCRUD
 {
@@ -15,7 +14,7 @@ trait CommonCRUD
      * @param Request $request
      * @param $modelClass
      * @param array $config
-     * @return array|Closure|ResponseFactory|Response
+     * @return array|Closure|JsonResponse
      */
     public function commonIndex(Request $request, $modelClass, array $config = [])
     {
@@ -171,7 +170,7 @@ trait CommonCRUD
      *
      * @param Request $request
      * @param $modelClass
-     * @return Response
+     * @return JsonResponse
      */
     public function commonStore(Request $request, $modelClass)
     {
@@ -184,7 +183,7 @@ trait CommonCRUD
      *
      * @param Request $request
      * @param $model
-     * @return Response
+     * @return JsonResponse
      */
     public function commonUpdate(Request $request, $model)
     {
@@ -207,7 +206,7 @@ trait CommonCRUD
      * Remove the specified resource from storage.
      *
      * @param $model
-     * @return Response
+     * @return JsonResponse
      */
     public function commonDestroy($model)
     {
