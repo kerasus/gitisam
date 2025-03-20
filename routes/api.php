@@ -5,6 +5,8 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\UserController;
 use App\Http\Controllers\Api\UnitController;
+use App\Http\Controllers\Api\InvoiceController;
+use App\Http\Controllers\Api\InvoiceTypeController;
 use App\Http\Controllers\Api\BuildingController;
 
 /*
@@ -30,7 +32,9 @@ Route::middleware('auth:sanctum')->group(function () {
 
     Route::resource('units', UnitController::class);
     Route::resource('users', '\\'.UserController::class);
+    Route::resource('invoices', '\\'.InvoiceController::class);
     Route::resource('buildings', '\\'.BuildingController::class);
+    Route::resource('invoice-types', '\\'.InvoiceTypeController::class);
 
     Route::post('/logout', [AuthController::class, 'logout']);
     Route::post('/send-verification-code', [AuthController::class, 'sendVerificationCode']);
