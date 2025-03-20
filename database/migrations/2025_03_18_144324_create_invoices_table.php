@@ -11,7 +11,7 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('charges', function (Blueprint $table) {
+        Schema::create('invoices', function (Blueprint $table) {
             $table->id();
             $table->foreignId('user_id')->nullable()->constrained()->onDelete('set null');
             $table->foreignId('unit_id')->nullable()->constrained()->onDelete('set null');
@@ -19,8 +19,8 @@ return new class extends Migration
             $table->text('description')->nullable();
             $table->decimal('amount', 10, 2);
             $table->date('due_date');
-            $table->foreignId('charge_type_id')->constrained('charge_types')->onDelete('cascade');
-            $table->foreignId('charge_status_id')->constrained('charge_status')->onDelete('cascade');
+            $table->foreignId('invoice_type_id')->constrained('invoice_types')->onDelete('cascade');
+            $table->enum('status', ['unpaid', 'paid', 'pending', 'cancelled'])->default('unpaid');
             $table->timestamps();
         });
     }
@@ -30,6 +30,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('charges');
+        Schema::dropIfExists('invoices');
     }
 };

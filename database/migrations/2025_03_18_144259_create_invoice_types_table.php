@@ -11,10 +11,12 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('charge_status', function (Blueprint $table) {
+        Schema::create('invoice_types', function (Blueprint $table) {
             $table->id();
-            $table->string('name');
-            $table->text('description')->nullable();
+            $table->string('name')
+                ->comment('Name of the invoice type (e.g., Water, Electricity, Rent)');;
+            $table->text('description')->nullable()
+                ->comment('Optional description explaining the invoice type');
             $table->timestamps();
         });
     }
@@ -24,6 +26,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('charge_status');
+        Schema::dropIfExists('invoice_types');
     }
 };

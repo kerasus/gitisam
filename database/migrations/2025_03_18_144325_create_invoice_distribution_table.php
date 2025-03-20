@@ -11,14 +11,12 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('expenses', function (Blueprint $table) {
+        Schema::create('invoice_distribution', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('unit_id')->nullable()->constrained('units')->onDelete('set null');
-            $table->string('title');
+            $table->foreignId('invoice_id')->constrained('invoices')->onDelete('cascade');
+            $table->foreignId('unit_id')->constrained('units')->onDelete('cascade');
+            $table->enum('distribution_method', ['equal', 'per_person', 'area', 'parking', 'custom'])->default('equal');
             $table->decimal('amount', 10, 2);
-            $table->enum('type', ['fixed', 'variable']);
-            $table->date('due_date');
-            $table->string('invoice_image')->nullable();
             $table->timestamps();
         });
     }
@@ -28,6 +26,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('expenses');
+        Schema::dropIfExists('invoice_distribution');
     }
 };
