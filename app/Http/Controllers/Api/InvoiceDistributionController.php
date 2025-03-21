@@ -25,17 +25,64 @@ class InvoiceDistributionController extends Controller
      * @param Request $request
      * @return JsonResponse
      */
-    public function index(Request $request)
+    public function index(Request $request): JsonResponse
     {
         $config = [
             'filterKeys' => [
-                'amount', 'status'
+                'distribution_method', 'amount'
+            ],
+            'filterRelationKeys' => [
+                // Filtering by invoice relation
+                [
+                    'requestKey' => 'invoiceNumber',
+                    'relationName' => 'invoice',
+                    'relationColumn' => 'invoice_number'
+                ],
+                [
+                    'requestKey' => 'invoiceAmount',
+                    'relationName' => 'invoice',
+                    'relationColumn' => 'amount'
+                ],
+
+                // Filtering by unit relation
+                [
+                    'requestKey' => 'unitUnitNumber',
+                    'relationName' => 'unit',
+                    'relationColumn' => 'unit_number'
+                ],
+                [
+                    'requestKey' => 'unitType',
+                    'relationName' => 'unit',
+                    'relationColumn' => 'type'
+                ],
+                [
+                    'requestKey' => 'unitArea',
+                    'relationName' => 'unit',
+                    'relationColumn' => 'area'
+                ],
+                [
+                    'requestKey' => 'unitFloor',
+                    'relationName' => 'unit',
+                    'relationColumn' => 'floor'
+                ],
+
+                // Filtering by transactions relation
+                [
+                    'requestKey' => 'transactionAmount',
+                    'relationName' => 'transactions',
+                    'relationColumn' => 'amount'
+                ],
+                [
+                    'requestKey' => 'transactionStatus',
+                    'relationName' => 'transactions',
+                    'relationColumn' => 'transaction_status'
+                ]
             ],
             'eagerLoads' => [
-                'invoice', 'unit', 'user' // Load relationships if applicable
+                'invoice', 'unit'
             ],
             'setAppends' => [
-                'status_label' // Include the status label accessor in the response
+                'status_label'
             ]
         ];
 
@@ -48,7 +95,7 @@ class InvoiceDistributionController extends Controller
      * @param Request $request
      * @return JsonResponse
      */
-    public function store(Request $request)
+    public function store(Request $request): JsonResponse
     {
         $request->validate([
             'invoice_id' => 'required|exists:invoices,id',
@@ -67,9 +114,9 @@ class InvoiceDistributionController extends Controller
      * @param int $id
      * @return JsonResponse
      */
-    public function show($id)
+    public function show(int $id): JsonResponse
     {
-        $invoiceDistribution = InvoiceDistribution::with(['invoice', 'unit', 'user'])->findOrFail($id);
+        $invoiceDistribution = InvoiceDistribution::with(['invoice', 'unit', 'transactions', ])->findOrFail($id);
 
         return $this->jsonResponseOk($invoiceDistribution);
     }
@@ -81,7 +128,7 @@ class InvoiceDistributionController extends Controller
      * @param int $id
      * @return JsonResponse
      */
-    public function update(Request $request, $id)
+    public function update(Request $request, int $id): JsonResponse
     {
         $invoiceDistribution = InvoiceDistribution::findOrFail($id);
 
@@ -102,7 +149,7 @@ class InvoiceDistributionController extends Controller
      * @param int $id
      * @return JsonResponse
      */
-    public function destroy($id)
+    public function destroy(int $id): JsonResponse
     {
         $invoiceDistribution = InvoiceDistribution::findOrFail($id);
 

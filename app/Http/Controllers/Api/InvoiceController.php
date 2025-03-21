@@ -25,7 +25,7 @@ class InvoiceController extends Controller
      * @param Request $request
      * @return JsonResponse
      */
-    public function index(Request $request)
+    public function index(Request $request): JsonResponse
     {
         $config = [
             'filterKeys' => [
@@ -48,7 +48,7 @@ class InvoiceController extends Controller
      * @param Request $request
      * @return JsonResponse
      */
-    public function store(Request $request)
+    public function store(Request $request): JsonResponse
     {
         $request->validate([
             'title' => 'required|string|max:255',
@@ -67,7 +67,7 @@ class InvoiceController extends Controller
      * @param int $id
      * @return JsonResponse
      */
-    public function show($id)
+    public function show(int $id): JsonResponse
     {
         $invoice = Invoice::with(['invoiceDistributions.unit', 'invoiceDistributions.user'])->findOrFail($id);
 
@@ -81,7 +81,7 @@ class InvoiceController extends Controller
      * @param Invoice $invoice
      * @return JsonResponse
      */
-    public function update(Request $request, Invoice $invoice)
+    public function update(Request $request, Invoice $invoice): JsonResponse
     {
         $request->validate([
             'title' => 'sometimes|required|string|max:255',
@@ -100,7 +100,7 @@ class InvoiceController extends Controller
      * @param Invoice $invoice
      * @return JsonResponse
      */
-    public function destroy(Invoice $invoice)
+    public function destroy(Invoice $invoice): JsonResponse
     {
         return $this->commonDestroy($invoice);
     }

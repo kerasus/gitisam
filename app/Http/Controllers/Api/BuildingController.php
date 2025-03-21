@@ -6,7 +6,7 @@ use App\Traits\Filter;
 use App\Models\Building;
 use App\Traits\CommonCRUD;
 use Illuminate\Http\Request;
-use Illuminate\Http\Response;
+use Illuminate\Http\JsonResponse;
 use App\Http\Controllers\Controller;
 
 class BuildingController extends Controller
@@ -23,9 +23,9 @@ class BuildingController extends Controller
      * Display a listing of the resource.
      *
      * @param Request $request
-     * @return Response
+     * @return JsonResponse
      */
-    public function index(Request $request)
+    public function index(Request $request): JsonResponse
     {
         $config = [
             'filterKeys' => [
@@ -43,9 +43,9 @@ class BuildingController extends Controller
      * Store a newly created resource in storage.
      *
      * @param Request $request
-     * @return Response
+     * @return JsonResponse
      */
-    public function store(Request $request)
+    public function store(Request $request): JsonResponse
     {
         $request->validate([
             'name' => 'required|string|max:255',
@@ -63,9 +63,9 @@ class BuildingController extends Controller
      * Display the specified resource.
      *
      * @param int $id
-     * @return Response
+     * @return JsonResponse
      */
-    public function show($id)
+    public function show(int $id): JsonResponse
     {
         $building = Building::findOrFail($id);
 
@@ -77,9 +77,9 @@ class BuildingController extends Controller
      *
      * @param Request $request
      * @param Building $building
-     * @return Response
+     * @return JsonResponse
      */
-    public function update(Request $request, Building $building)
+    public function update(Request $request, Building $building): JsonResponse
     {
         $request->validate([
             'name' => 'sometimes|required|string|max:255',
@@ -97,9 +97,9 @@ class BuildingController extends Controller
      * Remove the specified resource from storage.
      *
      * @param Building $building
-     * @return Response
+     * @return JsonResponse
      */
-    public function destroy(Building $building)
+    public function destroy(Building $building): JsonResponse
     {
         return $this->commonDestroy($building);
     }
