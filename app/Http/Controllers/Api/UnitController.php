@@ -127,7 +127,7 @@ class UnitController extends Controller
      */
     public function show(int $id): JsonResponse
     {
-        $unit = Unit::findOrFail($id);
+        $unit = Unit::with(['building', 'images', 'transactions', 'unitUser.user'])->findOrFail($id);
 
         return $this->jsonResponseOk($unit);
     }

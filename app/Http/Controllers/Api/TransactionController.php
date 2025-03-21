@@ -25,14 +25,52 @@ class TransactionController extends Controller
      * @param Request $request
      * @return JsonResponse
      */
-    public function index(Request $request)
+    public function index(Request $request): JsonResponse
     {
         $config = [
             'filterKeys' => [
-                'amount', 'payment_method', 'transaction_status'
+                'amount',
+                'payment_method',
+                'receipt_image',
+                'authority',
+                'transactionID',
+                'transaction_status'
+            ],
+            'filterDate'=> [
+                'paid_at'
+            ],
+            'filterRelationKeys' => [
+                // Filtering by user relation
+                [
+                    'requestKey' => 'userName',
+                    'relationName' => 'user',
+                    'relationColumn' => 'name'
+                ],
+                [
+                    'requestKey' => 'userEmail',
+                    'relationName' => 'user',
+                    'relationColumn' => 'email'
+                ],
+                [
+                    'requestKey' => 'userMobile',
+                    'relationName' => 'user',
+                    'relationColumn' => 'mobile'
+                ],
+
+                // Filtering by invoiceDistributions relation
+                [
+                    'requestKey' => 'invoiceDistributionAmount',
+                    'relationName' => 'invoiceDistributions',
+                    'relationColumn' => 'amount'
+                ],
+                [
+                    'requestKey' => 'invoiceDistributionStatus',
+                    'relationName' => 'invoiceDistributions',
+                    'relationColumn' => 'status'
+                ]
             ],
             'eagerLoads' => [
-                'user', 'invoiceDistributions' // Load relationships if applicable
+                'user', 'invoiceDistributions'
             ],
             'setAppends' => [
                 'payment_method_label', 'transaction_status_label' // Include labels in the response
@@ -48,7 +86,7 @@ class TransactionController extends Controller
      * @param Request $request
      * @return JsonResponse
      */
-    public function store(Request $request)
+    public function store(Request $request): JsonResponse
     {
         $request->validate([
             'user_id' => 'nullable|exists:users,id',
@@ -69,7 +107,7 @@ class TransactionController extends Controller
      * @param int $id
      * @return JsonResponse
      */
-    public function show($id)
+    public function show(int $id): JsonResponse
     {
         $transaction = Transaction::with(['user', 'invoiceDistributions'])->findOrFail($id);
 
@@ -83,7 +121,7 @@ class TransactionController extends Controller
      * @param int $id
      * @return JsonResponse
      */
-    public function update(Request $request, $id)
+    public function update(Request $request, int $id): JsonResponse
     {
         $transaction = Transaction::findOrFail($id);
 
@@ -106,7 +144,7 @@ class TransactionController extends Controller
      * @param int $id
      * @return JsonResponse
      */
-    public function destroy($id)
+    public function destroy(int $id): JsonResponse
     {
         $transaction = Transaction::findOrFail($id);
 

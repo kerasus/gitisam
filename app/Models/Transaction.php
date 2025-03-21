@@ -4,6 +4,8 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 
 class Transaction extends Model
 {
@@ -28,7 +30,7 @@ class Transaction extends Model
     /**
      * Relationship: An invoice belongs to a user.
      */
-    public function user()
+    public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
     }
@@ -36,7 +38,7 @@ class Transaction extends Model
     /**
      * Relationship: A transaction can have many invoice distributions.
      */
-    public function invoiceDistributions()
+    public function invoiceDistributions(): BelongsToMany
     {
         return $this->belongsToMany(InvoiceDistribution::class, 'transaction_invoice_distribution')
             ->withPivot('amount', 'paid_amount')

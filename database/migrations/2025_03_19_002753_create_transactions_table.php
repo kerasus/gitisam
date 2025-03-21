@@ -21,6 +21,9 @@ return new class extends Migration
             $table->decimal('amount', 10, 2);
             $table->string('receipt_image')->nullable();
 
+            $table->timestamp('paid_at')->nullable()
+                ->comment('Timestamp when the transaction was marked as paid');
+
             $table->string('authority')
                 ->nullable()
                 ->unique()
