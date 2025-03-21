@@ -102,8 +102,7 @@ class UserController extends Controller
                 ]
             ],
             'eagerLoads' => [
-                'unitUsers',
-                'transactions'
+                'unitUsers'
             ]
         ];
 

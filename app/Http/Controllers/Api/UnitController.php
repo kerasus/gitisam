@@ -25,14 +25,74 @@ class UnitController extends Controller
      * @param Request $request
      * @return JsonResponse
      */
-    public function index(Request $request)
+    public function index(Request $request): JsonResponse
     {
         $config = [
             'filterKeys' => [
-                'name', 'floor', 'number'
+                'unit_number', 'type', 'area', 'floor', 'number_of_rooms',
+                'parking_spaces', 'resident_name', 'resident_phone', 'owner_name', 'owner_phone'
+            ],
+            'filterRelationKeys' => [
+                // Filtering by building relation
+                [
+                    'requestKey' => 'buildingName',
+                    'relationName' => 'building',
+                    'relationColumn' => 'name'
+                ],
+                [
+                    'requestKey' => 'buildingAddress',
+                    'relationName' => 'building',
+                    'relationColumn' => 'address'
+                ],
+
+                // Filtering by users relation
+                [
+                    'requestKey' => 'userName',
+                    'relationName' => 'users',
+                    'relationColumn' => 'name'
+                ],
+                [
+                    'requestKey' => 'userEmail',
+                    'relationName' => 'users',
+                    'relationColumn' => 'email'
+                ],
+                [
+                    'requestKey' => 'userMobile',
+                    'relationName' => 'users',
+                    'relationColumn' => 'mobile'
+                ],
+
+                // Filtering by transactions relation
+                [
+                    'requestKey' => 'transactionAmount',
+                    'relationName' => 'transactions',
+                    'relationColumn' => 'amount'
+                ],
+                [
+                    'requestKey' => 'transactionStatus',
+                    'relationName' => 'transactions',
+                    'relationColumn' => 'transaction_status'
+                ],
+                [
+                    'requestKey' => 'transactionPaymentMethod',
+                    'relationName' => 'transactions',
+                    'relationColumn' => 'payment_method'
+                ],
+
+                // Filtering by invoiceDistributions relation
+                [
+                    'requestKey' => 'invoiceDistributionAmount',
+                    'relationName' => 'invoiceDistributions',
+                    'relationColumn' => 'amount'
+                ],
+                [
+                    'requestKey' => 'invoiceDistributionStatus',
+                    'relationName' => 'invoiceDistributions',
+                    'relationColumn' => 'status'
+                ]
             ],
             'eagerLoads' => [
-                'building', 'images', 'users'
+                'building', 'images', 'unitUser.user'
             ]
         ];
 
@@ -45,7 +105,7 @@ class UnitController extends Controller
      * @param Request $request
      * @return JsonResponse
      */
-    public function store(Request $request)
+    public function store(Request $request): JsonResponse
     {
         $request->validate([
             'name' => 'required|string|max:255',
@@ -65,7 +125,7 @@ class UnitController extends Controller
      * @param int $id
      * @return JsonResponse
      */
-    public function show($id)
+    public function show(int $id): JsonResponse
     {
         $unit = Unit::findOrFail($id);
 
@@ -79,7 +139,7 @@ class UnitController extends Controller
      * @param Unit $unit
      * @return JsonResponse
      */
-    public function update(Request $request, Unit $unit)
+    public function update(Request $request, Unit $unit): JsonResponse
     {
         $request->validate([
             'name' => 'sometimes|required|string|max:255',
@@ -99,7 +159,7 @@ class UnitController extends Controller
      * @param Unit $unit
      * @return JsonResponse
      */
-    public function destroy(Unit $unit)
+    public function destroy(Unit $unit): JsonResponse
     {
         return $this->commonDestroy($unit);
     }

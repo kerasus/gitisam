@@ -4,6 +4,9 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\MorphMany;
 
 class Unit extends Model
 {
@@ -15,31 +18,31 @@ class Unit extends Model
     ];
 
     // Relationship: A unit belongs to a building
-    public function building()
+    public function building(): BelongsTo
     {
         return $this->belongsTo(Building::class);
     }
 
     // Relationship: A unit can have many images (polymorphic)
-    public function images()
+    public function images(): MorphMany
     {
         return $this->morphMany(Image::class, 'imageable');
     }
 
     // Relationship: A unit can have many transactions
-    public function transactions()
+    public function transactions(): HasMany
     {
         return $this->hasMany(Transaction::class);
     }
 
-    // Relationship: A unit can belong to many users (many-to-many)
-    public function users()
+    // Relationship: A unit belongs to one UnitUser
+    public function unitUser(): BelongsTo
     {
-        return $this->belongsToMany(User::class)->withTimestamps();
+        return $this->belongsTo(UnitUser::class);
     }
 
     // Relationship: A unit can have many invoice distributions
-    public function invoiceDistributions()
+    public function invoiceDistributions(): HasMany
     {
         return $this->hasMany(InvoiceDistribution::class);
     }
