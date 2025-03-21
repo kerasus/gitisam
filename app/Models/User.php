@@ -52,7 +52,7 @@ class User extends Authenticatable
     /**
      * Relationship: A user can belong to many units (many-to-many).
      */
-    public function unitUsers(): BelongsToMany
+    public function units(): BelongsToMany
     {
         return $this->belongsToMany(Unit::class, 'unit_user')
             ->withTimestamps();

@@ -109,7 +109,7 @@ class TransactionController extends Controller
      */
     public function show(int $id): JsonResponse
     {
-        $transaction = Transaction::with(['user', 'invoiceDistributions'])->findOrFail($id);
+        $transaction = Transaction::with(['user.units', 'invoiceDistributions.invoice'])->findOrFail($id);
 
         return $this->jsonResponseOk($transaction);
     }
