@@ -30,12 +30,6 @@ class InvoiceTypeController extends Controller
         $config = [
             'filterKeys' => [
                 'name', 'description'
-            ],
-            'eagerLoads' => [
-                // Add relationships here if applicable (e.g., invoices)
-            ],
-            'setAppends' => [
-                // Add attributes to append here if applicable
             ]
         ];
 
@@ -48,7 +42,7 @@ class InvoiceTypeController extends Controller
      * @param Request $request
      * @return JsonResponse
      */
-    public function store(Request $request)
+    public function store(Request $request): JsonResponse
     {
         $request->validate([
             'name' => 'required|string|max:255',
@@ -64,7 +58,7 @@ class InvoiceTypeController extends Controller
      * @param int $id
      * @return JsonResponse
      */
-    public function show($id)
+    public function show(int $id): JsonResponse
     {
         $invoiceType = InvoiceType::findOrFail($id);
 
@@ -78,7 +72,7 @@ class InvoiceTypeController extends Controller
      * @param int $id
      * @return JsonResponse
      */
-    public function update(Request $request, $id)
+    public function update(Request $request, int $id): JsonResponse
     {
         $invoiceType = InvoiceType::findOrFail($id);
 
@@ -96,7 +90,7 @@ class InvoiceTypeController extends Controller
      * @param int $id
      * @return JsonResponse
      */
-    public function destroy($id)
+    public function destroy(int $id): JsonResponse
     {
         $invoiceType = InvoiceType::findOrFail($id);
 
