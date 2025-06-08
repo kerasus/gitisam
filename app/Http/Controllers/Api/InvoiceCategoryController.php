@@ -4,12 +4,13 @@ namespace App\Http\Controllers\Api;
 
 use App\Traits\Filter;
 use App\Traits\CommonCRUD;
-use App\Models\InvoiceType;
 use Illuminate\Http\Request;
+use App\Models\InvoiceCategory;
 use Illuminate\Http\JsonResponse;
 use App\Http\Controllers\Controller;
+use Symfony\Component\HttpFoundation\Response;
 
-class InvoiceTypeController extends Controller
+class InvoiceCategoryController extends Controller
 {
     use Filter, CommonCRUD;
 
@@ -33,7 +34,7 @@ class InvoiceTypeController extends Controller
             ]
         ];
 
-        return $this->commonIndex($request, InvoiceType::class, $config);
+        return $this->commonIndex($request, InvoiceCategory::class, $config);
     }
 
     /**
@@ -49,7 +50,7 @@ class InvoiceTypeController extends Controller
             'description' => 'nullable|string',
         ]);
 
-        return $this->commonStore($request, InvoiceType::class);
+        return $this->commonStore($request, InvoiceCategory::class);
     }
 
     /**
@@ -60,7 +61,7 @@ class InvoiceTypeController extends Controller
      */
     public function show(int $id): JsonResponse
     {
-        $invoiceType = InvoiceType::findOrFail($id);
+        $invoiceType = InvoiceCategory::findOrFail($id);
 
         return $this->jsonResponseOk($invoiceType);
     }
@@ -74,7 +75,7 @@ class InvoiceTypeController extends Controller
      */
     public function update(Request $request, int $id): JsonResponse
     {
-        $invoiceType = InvoiceType::findOrFail($id);
+        $invoiceType = InvoiceCategory::findOrFail($id);
 
         $request->validate([
             'name' => 'sometimes|required|string|max:255',
@@ -92,7 +93,7 @@ class InvoiceTypeController extends Controller
      */
     public function destroy(int $id): JsonResponse
     {
-        $invoiceType = InvoiceType::findOrFail($id);
+        $invoiceType = InvoiceCategory::findOrFail($id);
 
         return $this->commonDestroy($invoiceType);
     }

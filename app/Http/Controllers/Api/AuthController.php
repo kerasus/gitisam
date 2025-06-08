@@ -2,15 +2,21 @@
 
 namespace App\Http\Controllers\Api;
 
-use App\Http\Controllers\Controller;
 use App\Models\User;
-use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Http\JsonResponse;
+use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\ValidationException;
+use Symfony\Component\HttpFoundation\Response;
 
 class AuthController extends Controller
 {
+    public function __construct()
+    {
+        $this->middleware('role:Manager')->only(['resetPassword']);
+    }
+
     /**
      * Register a new user.
      */
@@ -127,5 +133,32 @@ class AuthController extends Controller
         $request->user()->currentAccessToken()->delete();
 
         return response()->json(['message' => 'Logged out successfully']);
+    }
+
+    /**
+     * Reset a user's password by ID.
+     *
+     * @param Request $request
+     * @param int $user_id
+     * @return JsonResponse
+     */
+    public function resetPassword(Request $request, int $user_id): JsonResponse
+    {
+        // Validate the request data
+        $request->validate([
+            'new_password' => 'required|string|min:8|confirmed',
+        ]);
+
+        // Find the user by ID
+        $user = User::findOrFail($user_id);
+
+        // Update the user's password
+        $user->update([
+            'password' => Hash::make($request->input('new_password')),
+        ]);
+
+        return response()->json([
+            'message' => 'کلمه عبور با موفقیت تغییر یافت.',
+        ], 200);
     }
 }

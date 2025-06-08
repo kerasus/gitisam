@@ -31,6 +31,9 @@ class BuildingController extends Controller
             'filterKeys' => [
                 'name', 'address', 'city', 'district'
             ],
+            'setAppends' => [
+                'current_balance'
+            ],
             'eagerLoads' => [
                 'units', 'images'
             ]
@@ -67,7 +70,7 @@ class BuildingController extends Controller
      */
     public function show(int $id): JsonResponse
     {
-        $building = Building::findOrFail($id);
+        $building = Building::findOrFail($id)->setAppends([ 'current_balance' ]);
 
         return $this->jsonResponseOk($building);
     }

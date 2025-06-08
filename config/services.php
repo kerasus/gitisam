@@ -21,6 +21,22 @@ return [
         'scheme' => 'https',
     ],
 
+    'zarinpal' => [
+        'merchant_id' => env('ZARINPAL_MERCHANT_ID'),
+        'callback_url' => env('ZARINPAL_CALLBACK_URL'),
+        'sandbox' => env('ZARINPAL_SANDBOX', false),
+    ],
+
+    'samanGateway' => [
+        'terminal_id' => env('SAMAN_GATEWAY_TERMINAL_ID'),
+        'callback_url' => env('SAMAN_GATEWAY_CALLBACK_URL'),
+    ],
+
+    'smsir' => [
+        'api_key' => env('SMSIR_API_KEY'),
+        'line_number' => env('SMSIR_LINE_NUMBER'),
+    ],
+
     'postmark' => [
         'token' => env('POSTMARK_TOKEN'),
     ],

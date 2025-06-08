@@ -73,4 +73,5 @@ return [
         public_path('storage') => storage_path('app/public'),
     ],
 
+    'public_storage_path' => env('PUBLIC_STORAGE_PATH', 'https://gitisam.ir/api/storage/app/public'),
 ];

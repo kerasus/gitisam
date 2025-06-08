@@ -17,6 +17,10 @@ return new class extends Migration
             $table->string('address')->nullable();
             $table->string('city')->nullable();
             $table->string('district')->nullable();
+            $table->bigInteger('base_balance')->default(0);
+            $table->bigInteger('total_income')->default(0);
+            $table->unsignedBigInteger('paid_amount')->default(0);
+            $table->unsignedBigInteger('total_debt')->default(0);
             $table->decimal('latitude', 10, 7)->nullable();
             $table->decimal('longitude', 10, 7)->nullable();
             $table->timestamps();

@@ -19,11 +19,17 @@ return new class extends Migration
             $table->decimal('area', 8, 2);
             $table->integer('floor');
             $table->integer('number_of_rooms');
+            $table->integer('number_of_residents');
             $table->integer('parking_spaces');
-            $table->string('resident_name')->nullable();
-            $table->string('resident_phone')->nullable();
-            $table->string('owner_name')->nullable();
-            $table->string('owner_phone')->nullable();
+            $table->bigInteger('resident_base_balance')->default(0);
+            $table->bigInteger('owner_base_balance')->default(0);
+            $table->unsignedBigInteger('resident_paid_amount')->default(0);
+            $table->unsignedBigInteger('owner_paid_amount')->default(0);
+            $table->unsignedBigInteger('total_paid_amount')->default(0);
+            $table->unsignedBigInteger('resident_debt')->default(0);
+            $table->unsignedBigInteger('owner_debt')->default(0);
+            $table->unsignedBigInteger('total_debt')->default(0);
+            $table->text('description')->nullable();
             $table->timestamps();
         });
     }

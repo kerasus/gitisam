@@ -8,6 +8,10 @@ use App\Traits\CommonCRUD;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use App\Http\Controllers\Controller;
+use Symfony\Component\HttpFoundation\Response;
+
+use Illuminate\Support\Facades\Storage;
+use App\Models\Image;
 
 class InvoiceController extends Controller
 {
@@ -25,17 +29,26 @@ class InvoiceController extends Controller
      * @param Request $request
      * @return JsonResponse
      */
-    public function index(Request $request): JsonResponse
+    public function index(Request $request)
     {
         $config = [
             'filterKeys' => [
-                'title', 'status'
+                'title',
+                'description',
+                'status'
+            ],
+            'filterKeysExact'=> [
+                'target_group',
+                'invoice_category_id',
             ],
             'eagerLoads' => [
-                'invoiceDistributions.unit', 'invoiceDistributions.user'
+                'invoiceCategory'
+//                'invoiceDistributions.unit.unitUser'
             ],
             'setAppends' => [
-                'status_label'
+                'type_label',
+                'status_label',
+                'target_group_label'
             ]
         ];
 
@@ -55,7 +68,11 @@ class InvoiceController extends Controller
             'description' => 'nullable|string',
             'amount' => 'required|numeric|min:0',
             'due_date' => 'required|date',
-            'invoice_type_id' => 'required|exists:invoice_types,id',
+            'invoice_category_id' => 'required|exists:invoice_categories,id',
+            'type' => 'required|in:monthly_charge,planned_expense,unexpected_expense',
+            'target_group' => 'required|in:resident,owner',
+            'is_covered_by_monthly_charge' => 'required|boolean',
+            'status' => 'nullable|in:unpaid,paid,pending,cancelled',
         ]);
 
         return $this->commonStore($request, Invoice::class);
@@ -69,7 +86,7 @@ class InvoiceController extends Controller
      */
     public function show(int $id): JsonResponse
     {
-        $invoice = Invoice::with(['invoiceDistributions.unit', 'invoiceDistributions.user'])->findOrFail($id);
+        $invoice = Invoice::with(['invoiceDistributions.unit.residents', 'invoiceDistributions.unit.owners', 'images'])->findOrFail($id);
 
         return $this->jsonResponseOk($invoice);
     }
@@ -103,5 +120,82 @@ class InvoiceController extends Controller
     public function destroy(Invoice $invoice): JsonResponse
     {
         return $this->commonDestroy($invoice);
+    }
+
+    /**
+     * Attach a single image to an existing invoice.
+     *
+     * @param Request $request
+     * @param int $invoiceId
+     * @return JsonResponse
+     */
+    public function attachImageToInvoice(Request $request, int $invoiceId): JsonResponse
+    {
+        // Validate the request data
+        $request->validate([
+            'image' => 'required|file|mimes:jpeg,png,jpg,gif|max:2048', // Max 2MB per image
+        ]);
+
+        try {
+            // Find the invoice by ID
+            $invoice = Invoice::findOrFail($invoiceId);
+
+            // Handle uploaded image
+            if ($request->hasFile('image')) {
+                // Store the image in the 'public/invoices' directory
+                $path = $request->file('image')->store('invoices', 'public');
+
+                // Create an image record associated with the invoice
+                $invoice->images()->create([
+                    'path' => $path,
+                ]);
+            }
+
+            return response()->json([
+                'message' => 'Image attached to the invoice successfully.',
+                'data' => $invoice->load('images'), // Include the associated images in the response
+            ], Response::HTTP_OK);
+        } catch (\Exception $e) {
+            \Log::error("Error attaching image to invoice: " . $e->getMessage());
+
+            return response()->json([
+                'error' => 'An unexpected error occurred while attaching the image to the invoice.',
+            ], Response::HTTP_INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    /**
+     * Detach an image from an existing invoice and delete it from storage.
+     *
+     * @param int $invoiceId
+     * @param int $imageId
+     * @return JsonResponse
+     */
+    public function detachImageFromInvoice($invoiceId, $imageId): JsonResponse
+    {
+        try {
+            // Find the invoice by ID
+            $invoice = Invoice::findOrFail($invoiceId);
+
+            // Find the image by ID and ensure it belongs to the invoice
+            $image = $invoice->images()->where('id', $imageId)->firstOrFail();
+
+            // Delete the image file from storage
+            Storage::disk('public')->delete($image->path);
+
+            // Delete the image record from the database
+            $image->delete();
+
+            return response()->json([
+                'message' => 'Image detached from the invoice successfully.',
+                'data' => $invoice->load('images'), // Include the updated list of images in the response
+            ], Response::HTTP_OK);
+        } catch (\Exception $e) {
+            \Log::error("Error detaching image from invoice: " . $e->getMessage());
+
+            return response()->json([
+                'error' => 'An unexpected error occurred while detaching the image from the invoice.',
+            ], Response::HTTP_INTERNAL_SERVER_ERROR);
+        }
     }
 }

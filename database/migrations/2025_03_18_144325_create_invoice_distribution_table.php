@@ -11,13 +11,17 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('invoice_distribution', function (Blueprint $table) {
+        Schema::create('invoice_distributions', function (Blueprint $table) {
             $table->id();
             $table->foreignId('invoice_id')->constrained('invoices')->onDelete('cascade');
             $table->foreignId('unit_id')->constrained('units')->onDelete('cascade');
             $table->enum('distribution_method', ['equal', 'per_person', 'area', 'parking', 'custom'])->default('equal');
-            $table->decimal('amount', 10, 2);
+            $table->enum('status', ['unpaid', 'paid', 'pending', 'cancelled'])->default('unpaid');
+            $table->text('description')->nullable();
+            $table->unsignedBigInteger('amount');
+            $table->unsignedBigInteger('paid_amount')->default(0);
             $table->timestamps();
+            $table->softDeletes();
         });
     }
 

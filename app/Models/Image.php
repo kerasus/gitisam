@@ -13,9 +13,25 @@ class Image extends Model
         'path'
     ];
 
+    protected $appends = ['url'];
+
     // Polymorphic relationship: An image belongs to an imageable model
     public function imageable()
     {
         return $this->morphTo();
+    }
+
+    /**
+     * Get the full URL of the image.
+     *
+     * @return string
+     */
+    public function getUrlAttribute()
+    {
+//        return asset('storage/' . $this->path);
+
+        $publicStoragePath = config('filesystems.public_storage_path');
+
+        return rtrim($publicStoragePath, '/') . '/' . ltrim($this->path, '/');
     }
 }

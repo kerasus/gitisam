@@ -7,9 +7,12 @@
     "require": {
         "php": "^8.1",
         "guzzlehttp/guzzle": "^7.2",
+        "ipe/smsir-php": "^1.0",
         "laravel/framework": "^10.10",
         "laravel/sanctum": "^3.3",
-        "laravel/tinker": "^2.8"
+        "laravel/tinker": "^2.8",
+        "morilog/jalali": "^3.4",
+        "spatie/laravel-permission": "^6.16"
     },
     "require-dev": {
         "barryvdh/laravel-ide-helper": "^3.1",

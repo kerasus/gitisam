@@ -99,9 +99,14 @@ trait CommonCRUD
 
     private function loadScopes(Request $request, & $modelQuery, $scopes) {
         foreach ($scopes as $item) {
-            $scopeItem = ($request->has($item)) ? $request->get($item) : false;
-            if ($scopeItem) {
-                $modelQuery->$item();
+            // Check if the scope key exists in the request
+            if ($request->has($item)) {
+                $scopeValue = $request->get($item);
+
+                // Apply the scope only if the value is true or 1
+                if ($scopeValue === true || $scopeValue === 'true' || $scopeValue == 1) {
+                    $modelQuery->$item();
+                }
             }
         }
     }

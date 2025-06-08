@@ -4,10 +4,10 @@ namespace App\Traits;
 
 use Carbon\Carbon;
 use Illuminate\Http\Request;
-use Illuminate\Http\Response;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Database\Eloquent\Builder;
+use Symfony\Component\HttpFoundation\Response;
 
 trait Filter
 {
@@ -15,7 +15,7 @@ trait Filter
         $requestKey = $filterData['requestKey'];
         $relationName = (isset($filterData['relationName'])) ? $filterData['relationName'] : null;
         $relationNames = (isset($filterData['relationNames'])) ? $filterData['relationNames'] : null;
-        $orWhereHas = (isset($filterData['orWhereHas'])) ? $filterData['orWhereHas'] : false;
+        $orWhereHas = isset($filterData['orWhereHas']) && $filterData['orWhereHas'];
 
         $relationIds = $request->get($requestKey);
         if (!isset($relationIds)) {
@@ -53,6 +53,7 @@ trait Filter
     private function filterByRelationKey(Request $request, $filterData, & $modelQuery) {
 
         $requestKey = $filterData['requestKey'];
+        $exact = (isset($filterData['exact'])) ? $filterData['exact'] : false;
         $relationName = (isset($filterData['relationName'])) ? $filterData['relationName'] : null;
         $relationColumn = (isset($filterData['relationColumn'])) ? $filterData['relationColumn'] : null;
 
@@ -60,21 +61,26 @@ trait Filter
         if (!isset($name)) {
             return;
         }
-        $modelQuery->whereHas($relationName, function (Builder $query) use ($name, $relationColumn) {
-            $query->where($relationColumn, 'like', '%' . $name . '%');
+        $modelQuery->whereHas($relationName, function (Builder $query) use ($name, $relationColumn, $exact) {
+            if ($exact) {
+                $query->where($relationColumn, '=', $name);
+            } else {
+                $query->where($relationColumn, 'like', '%' . $name . '%');
+            }
+
         });
     }
 
     private function filterByKey($request, $key, & $modelQuery) {
         $keyValue = trim($request->get($key));
-        if (isset($keyValue) && strlen($keyValue) > 0) {
+        if (strlen($keyValue) > 0) {
             $modelQuery = $modelQuery->where($key, 'like', '%' . $keyValue . '%');
         }
     }
 
     private function filterByKeyExact($request, $key, & $modelQuery) {
         $keyValue = trim($request->get($key));
-        if (isset($keyValue) && strlen($keyValue) > 0) {
+        if (strlen($keyValue) > 0) {
             $modelQuery = $modelQuery->where($key, '=', $keyValue);
         }
     }

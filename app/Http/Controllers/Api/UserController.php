@@ -17,6 +17,7 @@ class UserController extends Controller
     {
         // Apply authorization middleware if needed
         $this->middleware('auth:sanctum');
+        $this->middleware('role:Manager')->only(['index', 'store', 'show', 'update', 'destroy', 'assignRole', 'removeRole']);
     }
 
     /**
@@ -29,7 +30,11 @@ class UserController extends Controller
     {
         $config = [
             'filterKeys' => [
-                'name', 'username', 'email', 'mobile'
+                'firstname',
+                'lastname',
+                'username',
+                'email',
+                'mobile'
             ],
             'filterRelationKeys' => [
                 // Filtering by related units (via unitUsers relationship)
@@ -118,11 +123,12 @@ class UserController extends Controller
     public function store(Request $request): JsonResponse
     {
         $request->validate([
-            'name' => 'required|string|max:255',
+            'firstname' => 'required|string|max:255',
+            'lastname' => 'required|string|max:255',
             'username' => 'required|string|unique:users',
             'mobile' => 'required|string|unique:users',
             'email' => 'nullable|string|email|unique:users',
-            'password' => 'required|string|min:8',
+            'password' => 'required|string|min:6',
         ]);
 
         return $this->commonStore($request, User::class);
@@ -170,5 +176,73 @@ class UserController extends Controller
     public function destroy(User $user): JsonResponse
     {
         return $this->commonDestroy($user);
+    }
+
+    /**
+     * Assign a role to a user.
+     *
+     * @param Request $request
+     * @param int $userId
+     * @return JsonResponse
+     */
+    public function assignRole(Request $request, int $userId): JsonResponse
+    {
+        try {
+            // Validate the request data
+            $request->validate([
+                'role' => 'required|string|exists:roles,name', // Ensure the role exists in the database
+            ]);
+
+            // Find the user by ID
+            $user = User::findOrFail($userId);
+
+            // Assign the role to the user
+            $user->assignRole($request->input('role'));
+
+            return response()->json([
+                'message' => 'نقش کاربر با موفقیت ایجاد شد.',
+                'data' => [
+                    'user' => $user,
+                    'roles' => $user->getRoleNames(), // Get all roles assigned to the user
+                ],
+            ], 200);
+        } catch (\Exception $e) {
+            \Log::error("Error assigning role to user: " . $e->getMessage());
+            return response()->json(['error' => 'An unexpected error occurred while assigning the role.'], 500);
+        }
+    }
+
+    /**
+     * Remove a role from a user.
+     *
+     * @param Request $request
+     * @param int $userId
+     * @return JsonResponse
+     */
+    public function removeRole(Request $request, int $userId): JsonResponse
+    {
+        try {
+            // Validate the request data
+            $request->validate([
+                'role' => 'required|string|exists:roles,name', // Ensure the role exists in the database
+            ]);
+
+            // Find the user by ID
+            $user = User::findOrFail($userId);
+
+            // Remove the role from the user
+            $user->removeRole($request->input('role'));
+
+            return response()->json([
+                'message' => 'نقش کاربر با موفقیت حذف شد.',
+                'data' => [
+                    'user' => $user,
+                    'roles' => $user->getRoleNames(), // Get all roles assigned to the user
+                ],
+            ], 200);
+        } catch (\Exception $e) {
+            \Log::error("Error removing role from user: " . $e->getMessage());
+            return response()->json(['error' => 'An unexpected error occurred while removing the role.'], 500);
+        }
     }
 }

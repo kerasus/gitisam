@@ -13,8 +13,9 @@ return new class extends Migration
     {
         Schema::create('unit_user', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('user_id')->constrained('users')->onDelete('cascade');
             $table->foreignId('unit_id')->constrained('units')->onDelete('cascade');
+            $table->foreignId('user_id')->constrained('users')->onDelete('cascade');
+            $table->enum('role', ['resident', 'owner'])->default('resident');
             $table->timestamps();
         });
     }

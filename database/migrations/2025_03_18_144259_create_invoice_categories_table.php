@@ -11,12 +11,11 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('invoice_types', function (Blueprint $table) {
+        Schema::create('invoice_categories', function (Blueprint $table) {
             $table->id();
             $table->string('name')
                 ->comment('Name of the invoice type (e.g., Water, Electricity, Rent)');;
-            $table->text('description')->nullable()
-                ->comment('Optional description explaining the invoice type');
+            $table->text('description')->nullable();
             $table->timestamps();
         });
     }

@@ -2,15 +2,34 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
+use App\Services\InvoiceDistributionCalculatorService;
+use Illuminate\Support\Facades\Log;
 
 class InvoiceDistribution extends Model
 {
-    use HasFactory;
+    use HasFactory, SoftDeletes;
 
     protected $fillable = [
-        'invoice_id', 'unit_id', 'distribution_method', 'amount'
+        'invoice_id', 'unit_id', 'distribution_method', 'description', 'amount', 'paid_amount', 'status',
+    ];
+
+    protected $appends = ['current_balance'];
+
+    /**
+     * The attributes that should be cast.
+     *
+     * @var array<string, string>
+     */
+    protected $casts = [
+        'distribution_method' => 'string',
+        'status' => 'string',
+        'amount' => 'integer',
+        'paid_amount' => 'integer',
+        'deleted_at' => 'datetime',
     ];
 
     /**
@@ -34,9 +53,52 @@ class InvoiceDistribution extends Model
      */
     public function transactions()
     {
-        return $this->belongsToMany(Transaction::class, 'transaction_invoice_distribution')
+        return $this->belongsToMany(Transaction::class, 'transaction_invoice_distributions')
             ->withPivot('amount', 'paid_amount')
             ->withTimestamps();
+    }
+
+    /**
+     * Scopes
+     */
+    public function scopePaid($query)
+    {
+        return $query->where('status', 'paid');
+    }
+
+    public function scopeUnpaid($query)
+    {
+        return $query->where('status', 'unpaid');
+    }
+
+    public function scopeNotDeleted($query)
+    {
+        return $query->whereNull('deleted_at');
+    }
+
+    /**
+     * Scope to filter distributions for resident-related invoices.
+     */
+    public function scopeForResidents($query)
+    {
+        return $query->whereHas('invoice', function ($q) {
+            $q->forResidents();
+        });
+    }
+
+    /**
+     * Scope to filter distributions for owner-related invoices.
+     */
+    public function scopeForOwners($query)
+    {
+        return $query->whereHas('invoice', function ($q) {
+            $q->forOwners();
+        });
+    }
+
+    public function getCurrentBalanceAttribute()
+    {
+        return $this->amount - $this->paid_amount;
     }
 
     /**
@@ -45,92 +107,110 @@ class InvoiceDistribution extends Model
     public function getStatusLabelAttribute(): string
     {
         return match ($this->status) {
-            'unpaid' => 'Unpaid',
-            'paid' => 'Paid',
-            'pending' => 'Pending',
-            'cancelled' => 'Cancelled',
-            default => 'Unknown',
+            'unpaid' => 'پرداخت نشده',
+            'paid' => 'پرداخت شده',
+            'pending' => 'در حال بررسی',
+            'cancelled' => 'لغو شده',
+            default => 'نا مشخص',
         };
     }
 
-    // Scopes
     /**
-     * Scope to filter unpaid distributions.
+     * Get the label for the distribution_method.
      */
-    public function scopeUnpaid($query)
+    public function getDistributionMethodLabelAttribute(): string
     {
-        return $query->where('status', 'unpaid');
+        return match ($this->distribution_method) {
+            'equal' => 'برابر',
+            'per_person' => 'بر اساس تعداد نفرات',
+            'area' => 'بر اساس متراژ',
+            'parking' => 'بر اساس پارکینگ',
+            'custom' => 'دلخواه',
+            default => 'نا مشخص',
+        };
+    }
+
+    public function calculatePaidAmount(): int
+    {
+        return (int)$this->transactions()
+            ->notDeleted()
+            ->paid()
+            ->sum('transaction_invoice_distributions.paid_amount');
+    }
+
+    public function updateBalance()
+    {
+        try {
+            // Calculate the total paid amount for this invoice distribution
+            $newPaidAmount = $this->calculatePaidAmount();
+
+            // Update the paid_amount of the invoice distribution
+            $this->update(['paid_amount' => $newPaidAmount]);
+
+            // Check if the distribution is fully paid
+            if ($newPaidAmount >= $this->amount) {
+                $this->update(['status' => 'paid']);
+            } else {
+                $this->update(['status' => 'unpaid']);
+            }
+        } catch (\Exception $e) {
+            \Log::error("Error updating balance for invoice distribution ID {$this->id}: " . $e->getMessage());
+            throw $e; // Re-throw the exception if needed
+        }
     }
 
     /**
-     * Scope to filter paid distributions.
+     * Handle the deletion of an invoice distribution.
      */
-    public function scopePaid($query)
+    public function handleDeletion()
     {
-        return $query->where('status', 'paid');
-    }
+        DB::beginTransaction();
+        try {
+            // Get the related invoice and its total amount
+            $invoice = $this->invoice;
+            if (!$invoice) {
+                throw new \Exception("Invoice not found for invoice distribution ID {$this->id}");
+            }
 
-    /**
-     * Scope to filter pending distributions.
-     */
-    public function scopePending($query)
-    {
-        return $query->where('status', 'pending');
-    }
+            $totalInvoiceAmount = $invoice->amount;
 
-    /**
-     * Scope to filter cancelled distributions.
-     */
-    public function scopeCancelled($query)
-    {
-        return $query->where('status', 'cancelled');
-    }
+            // Get all remaining distributions for the invoice
+            $remainingDistributions = $invoice->invoiceDistributions()
+                ->where('id', '!=', $this->id)
+                ->get();
 
-    /**
-     * Scope to filter distributions by a specific status.
-     */
-    public function scopeByStatus($query, $status)
-    {
-        return $query->where('status', $status);
-    }
+            $count = $remainingDistributions->count();
+            if ($count === 0) {
+                $this->delete();
+                DB::commit();
+                return;
+            }
 
-    /**
-     * Scope to filter distributions by amount range.
-     */
-    public function scopeByAmountRange($query, $min, $max)
-    {
-        return $query->whereBetween('amount', [$min, $max]);
-    }
+            // Recalculate amounts and descriptions using the service
+            $calculatorService = new InvoiceDistributionCalculatorService();
+            $newDistributions = $calculatorService->calculate(
+                $remainingDistributions->first()->distribution_method,
+                $remainingDistributions->pluck('unit_id')->toArray(),
+                $totalInvoiceAmount
+            );
 
-    /**
-     * Scope to filter distributions with an amount greater than a value.
-     */
-    public function scopeAmountGreaterThan($query, $value)
-    {
-        return $query->where('amount', '>', $value);
-    }
+            // Update each remaining distribution
+            foreach ($remainingDistributions as $distribution) {
+                $newData = $newDistributions->firstWhere('unit_id', $distribution->unit_id);
+                $distribution->update([
+                    'amount' => $newData['amount'],
+                    'description' => $newData['description'],
+                ]);
+            }
 
-    /**
-     * Scope to filter distributions with an amount less than a value.
-     */
-    public function scopeAmountLessThan($query, $value)
-    {
-        return $query->where('amount', '<', $value);
-    }
+            // Soft delete the current invoice distribution
+            $this->delete();
 
-    /**
-     * Scope to filter distributions by invoice ID.
-     */
-    public function scopeByInvoiceId($query, $invoiceId)
-    {
-        return $query->where('invoice_id', $invoiceId);
-    }
-
-    /**
-     * Scope to filter distributions by unit ID.
-     */
-    public function scopeByUnitId($query, $unitId)
-    {
-        return $query->where('unit_id', $unitId);
+            DB::commit();
+        } catch (\Exception $e) {
+            DB::rollBack();
+            \Log::error("Error handling deletion for invoice distribution ID {$this->id}: " . $e->getMessage());
+            throw $e;
+        }
     }
 }

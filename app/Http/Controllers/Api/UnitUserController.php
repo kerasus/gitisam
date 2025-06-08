@@ -3,11 +3,11 @@
 namespace App\Http\Controllers\Api;
 
 use App\Traits\Filter;
-use App\Models\UnitUser;
 use App\Traits\CommonCRUD;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use App\Http\Controllers\Controller;
+use Symfony\Component\HttpFoundation\Response;
 
 class UnitUserController extends Controller
 {

@@ -13,17 +13,29 @@ return new class extends Migration
     {
         Schema::create('transactions', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('user_id')
+
+            $table->foreignId('user_id')->nullable()->constrained('users')->onDelete('set null');
+
+            $table->foreignId('building_id')
                 ->nullable()
-                ->constrained('users')
+                ->constrained('buildings')
                 ->onDelete('set null');
 
-            $table->decimal('amount', 10, 2);
+            $table->foreignId('unit_id')
+                ->nullable()
+                ->constrained('units')
+                ->onDelete('set null');
+
+            $table->unsignedBigInteger('amount');
             $table->string('receipt_image')->nullable();
 
             $table->timestamp('paid_at')->nullable()
                 ->comment('Timestamp when the transaction was marked as paid');
 
+            $table->timestamp('redirected_at')->nullable();
+            $table->timestamp('verified_at')->nullable();
+
+            // zarinpal transaction info
             $table->string('authority')
                 ->nullable()
                 ->unique()
@@ -34,30 +46,46 @@ return new class extends Migration
                 ->unique()
                 ->comment('Tracking code for the transaction');
 
-
+            // 'bank_gateway','bank_gateway_zarinpal','bank_gateway_saman','mobile_banking','atm','cash','check'
             // Payment method as ENUM
             $table->enum('payment_method', [
-                'online',
+                'bank_gateway_zarinpal',
+                'bank_gateway_saman',
+                'mobile_banking',
                 'atm',
-                'pos',
-                'paycheck',
-                'wallet'
-            ])->default('online');
+                'cash',
+                'check'
+            ])->default('mobile_banking');
 
-            // Transaction status as ENUM
+            $table->string('gateway_name')->nullable();
+
             $table->enum('transaction_status', [
                 'transferred_to_pay',
+                'pending_verification',
+                'expired',
                 'unsuccessful',
-                'successful',
-                'pending',
-                'archived_successful',
+                'paid',
                 'unpaid',
-                'suspended',
-                'organizational_unpaid'
             ])->default('unpaid')
                 ->comment('Status of the transaction (e.g., pending, successful)');
 
+            $table->enum('callback_status', ['OK', 'NOK', 'pending'])->nullable();
+            $table->string('card_pan')->nullable();
+            $table->string('card_hash')->nullable();
+            $table->unsignedBigInteger('fee')->nullable();
+            $table->enum('currency', ['IRR', 'IRT'])->default('IRR');
+            $table->string('mobile')->nullable();
+
+            $table->enum('transaction_type', ['unit_transaction', 'building_income'])
+                ->default('unit_transaction')
+                ->comment('Type of transaction (unit-related or building income)');
+            $table->enum('target_group', ['resident', 'owner'])
+                ->comment('Target group of the transaction (resident or owner)');
+
+            $table->text('description')->nullable()->comment('Description of the income');
+
             $table->timestamps();
+            $table->softDeletes();
         });
     }
 

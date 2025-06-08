@@ -15,10 +15,15 @@ return new class extends Migration
             $table->id();
             $table->string('title');
             $table->text('description')->nullable();
-            $table->decimal('amount', 10, 2);
+            $table->unsignedBigInteger('amount');
+            $table->unsignedBigInteger('paid_amount')->default(0);
             $table->date('due_date');
-            $table->foreignId('invoice_type_id')->constrained('invoice_types')->onDelete('cascade');
+            $table->string('image')->nullable();
+            $table->foreignId('invoice_category_id')->constrained('invoice_categories')->onDelete('cascade');
             $table->enum('status', ['unpaid', 'paid', 'pending', 'cancelled'])->default('unpaid');
+            $table->enum('type', ['monthly_charge', 'planned_expense', 'unexpected_expense'])->default('monthly_charge');
+            $table->enum('target_group', ['resident', 'owner'])->default('resident');
+            $table->boolean('is_covered_by_monthly_charge')->default(false);
             $table->timestamps();
         });
     }
