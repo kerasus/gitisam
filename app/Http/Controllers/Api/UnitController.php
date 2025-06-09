@@ -131,7 +131,13 @@ class UnitController extends Controller
         $responseWithAttachedCollection = $data['responseWithAttachedCollection'];
 
         $modelQuery->orderByRaw('((CAST(resident_base_balance AS SIGNED) + CAST(owner_base_balance AS SIGNED)) + (CAST(resident_paid_amount AS SIGNED) + CAST(owner_paid_amount AS SIGNED)) - CAST(total_debt AS SIGNED)) ASC');
-
+        $modelQuery->orderByRaw(
+            '(
+                (CAST(resident_base_balance AS SIGNED) + CAST(owner_base_balance AS SIGNED)) +
+                (CAST(resident_paid_amount AS SIGNED) + CAST(owner_paid_amount AS SIGNED)) -
+                (CAST(resident_debt AS SIGNED) + CAST(owner_debt AS SIGNED))
+             ) ASC'
+        );
 //        dd(Str::replaceArray('?', $modelQuery->getBindings(), $modelQuery->toSql()));
 
         return $responseWithAttachedCollection($modelQuery);
@@ -342,7 +348,13 @@ class UnitController extends Controller
             }
 
             // Fetch the first resident of the unit
-            $user = $unit->residents()->first();
+
+            if ($target_group === 'resident') {
+                $user = $unit->residents()->first();
+            }
+            if ($target_group === 'owner') {
+                $user = $unit->owners()->first();
+            }
 
             if (!$user) {
                 return response()->json([

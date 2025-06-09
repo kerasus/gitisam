@@ -21,7 +21,7 @@ class SmsController extends Controller
     /**
      * Send monthly debt reminders to users.
      */
-    public function sendMonthlyDebtReminders($target_group)
+    public function sendMonthlyDebtReminders($target_group): JsonResponse
     {
         try {
             if (!in_array($target_group, ['resident', 'owner'])) {
@@ -30,8 +30,23 @@ class SmsController extends Controller
                 ], Response::HTTP_BAD_REQUEST);
             }
 
-            // Fetch all units with outstanding debts
-            $units = Unit::where('total_debt', '>', 0)->get();
+            if ($target_group === 'resident') {
+                $units = Unit::whereRaw('(CAST(resident_base_balance AS SIGNED) + CAST(resident_paid_amount AS SIGNED) - CAST(resident_debt AS SIGNED)) < 0')
+                    ->get();
+                if ($units->isEmpty()) {
+                    return response()->json([
+                        'ساکن بدهکاری وجود ندارد.'
+                    ], Response::HTTP_BAD_REQUEST);
+                }
+            } elseif ($target_group === 'owner') {
+                $units = Unit::whereRaw('(CAST(owner_base_balance AS SIGNED) + CAST(owner_paid_amount AS SIGNED) - CAST(owner_debt AS SIGNED)) < 0')
+                    ->get();
+                if ($units->isEmpty()) {
+                    return response()->json([
+                        'مالک بدهکاری وجود ندارد.'
+                    ], Response::HTTP_BAD_REQUEST);
+                }
+            }
 
             // Initialize an array to store results
             $results = [];
