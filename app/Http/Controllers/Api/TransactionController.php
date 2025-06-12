@@ -128,6 +128,7 @@ class TransactionController extends Controller
             'unit_id' => $request->input('unit_id'),
             'amount' => $request->input('amount'),
             'payment_method' => $request->input('payment_method'),
+            'target_group' => $request->input('target_group'),
             'authority' => $request->input('authority'),
             'transactionID' => $request->input('transactionID'),
             'transaction_status' => $request->input('transaction_status'),

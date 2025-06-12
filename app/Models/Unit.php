@@ -161,7 +161,11 @@ class Unit extends Model
     public function scopeNegativeBalance($query)
     {
         return $query->whereRaw(
-            '(CAST(resident_base_balance AS SIGNED) + CAST(owner_base_balance AS SIGNED)) + (CAST(resident_paid_amount AS SIGNED) + CAST(owner_paid_amount AS SIGNED)) - CAST(total_debt AS SIGNED) < 0'
+            '(
+                (COALESCE(CAST(resident_base_balance AS SIGNED), 0) + COALESCE(CAST(owner_base_balance AS SIGNED), 0)) +
+                (COALESCE(CAST(resident_paid_amount AS SIGNED), 0) + COALESCE(CAST(owner_paid_amount AS SIGNED), 0)) -
+                (COALESCE(CAST(resident_debt AS SIGNED), 0) + COALESCE(CAST(owner_debt AS SIGNED), 0))
+            ) < 0'
         );
     }
 
@@ -176,17 +180,23 @@ class Unit extends Model
 
     public function getCurrentBalanceAttribute()
     {
-        return ($this->resident_base_balance + $this->owner_base_balance) + ( $this->resident_paid_amount + $this->owner_paid_amount) - ( $this->resident_debt + $this->owner_debt);
+        return (($this->resident_base_balance ?? 0) + ($this->owner_base_balance ?? 0)) +
+            (($this->resident_paid_amount ?? 0) + ($this->owner_paid_amount ?? 0)) -
+            (($this->resident_debt ?? 0) + ($this->owner_debt ?? 0));
     }
 
     public function getCurrentResidentBalanceAttribute()
     {
-        return $this->resident_base_balance + $this->resident_paid_amount - $this->resident_debt;
+        return ($this->resident_base_balance ?? 0) +
+            ($this->resident_paid_amount ?? 0) -
+            ($this->resident_debt ?? 0);
     }
 
     public function getCurrentOwnerBalanceAttribute()
     {
-        return $this->owner_base_balance + $this->owner_paid_amount - $this->owner_debt;
+        return ($this->owner_base_balance ?? 0) +
+            ($this->owner_paid_amount ?? 0) -
+            ($this->owner_debt ?? 0);
     }
 
     public function allocateUnassignedTransactions()

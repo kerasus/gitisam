@@ -130,12 +130,11 @@ class UnitController extends Controller
         $modelQuery = $data['modelQuery'];
         $responseWithAttachedCollection = $data['responseWithAttachedCollection'];
 
-        $modelQuery->orderByRaw('((CAST(resident_base_balance AS SIGNED) + CAST(owner_base_balance AS SIGNED)) + (CAST(resident_paid_amount AS SIGNED) + CAST(owner_paid_amount AS SIGNED)) - CAST(total_debt AS SIGNED)) ASC');
         $modelQuery->orderByRaw(
             '(
-                (CAST(resident_base_balance AS SIGNED) + CAST(owner_base_balance AS SIGNED)) +
-                (CAST(resident_paid_amount AS SIGNED) + CAST(owner_paid_amount AS SIGNED)) -
-                (CAST(resident_debt AS SIGNED) + CAST(owner_debt AS SIGNED))
+                     (COALESCE(CAST(resident_base_balance AS SIGNED), 0) + COALESCE(CAST(owner_base_balance AS SIGNED), 0)) +
+                     (COALESCE(CAST(resident_paid_amount AS SIGNED), 0) + COALESCE(CAST(owner_paid_amount AS SIGNED), 0)) -
+                     (COALESCE(CAST(resident_debt AS SIGNED), 0) + COALESCE(CAST(owner_debt AS SIGNED), 0))
              ) ASC'
         );
 //        dd(Str::replaceArray('?', $modelQuery->getBindings(), $modelQuery->toSql()));
