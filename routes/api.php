@@ -87,12 +87,12 @@ Route::middleware('auth:sanctum')->group(function () {
 
     Route::get('/sms/account-balance', [SmsController::class, 'getAccountBalance'])
         ->name('account.balance');
-    Route::post('/sms/send-monthly-debt-reminders/{target_group}', [SmsController::class, 'sendMonthlyDebtReminders'])
+    Route::post('/sms/send-debt-notice/{target_group}', [SmsController::class, 'sendDebtNotice'])
         ->name('send.monthly.debt.reminders');
 
     Route::post('/logout', [AuthController::class, 'logout']);
     Route::post('/send-verification-code', [AuthController::class, 'sendVerificationCode']);
     Route::post('/verify-mobile', [AuthController::class, 'verifyMobile']);
 
-    Route::get('/backup-database', [DatabaseBackupController::class, 'backupDatabase']);
+    Route::post('/database/backup', [DatabaseBackupController::class, 'backupDatabase']);
 });

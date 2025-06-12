@@ -3,9 +3,6 @@
 namespace App\Http\Controllers\Api;
 
 use Illuminate\Http\JsonResponse;
-use Illuminate\Support\Facades\Storage;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Schema;
 use App\Http\Controllers\Controller;
 use Symfony\Component\HttpFoundation\Response;
 

@@ -21,7 +21,7 @@ class SmsController extends Controller
     /**
      * Send monthly debt reminders to users.
      */
-    public function sendMonthlyDebtReminders($target_group): JsonResponse
+    public function sendDebtNotice($target_group): JsonResponse
     {
         try {
             if (!in_array($target_group, ['resident', 'owner'])) {
@@ -54,7 +54,6 @@ class SmsController extends Controller
             $jalaliService = new JalaliService();
 
             $shamsiDate = $jalaliService->toJalali();
-
 
             foreach ($units as $unit) {
                 // Check if the unit has any outstanding debt
