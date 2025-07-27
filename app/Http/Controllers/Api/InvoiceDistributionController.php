@@ -39,10 +39,15 @@ class InvoiceDistributionController extends Controller
                 'distribution_method', 'amount'
             ],
             'filterKeysExact'=> [
-                'unit_id',
+                'unit_id'
             ],
             'filterRelationKeys' => [
                 // Filtering by invoice relation
+                [
+                    'requestKey' => 'invoiceTitle',
+                    'relationName' => 'invoice',
+                    'relationColumn' => 'title'
+                ],
                 [
                     'requestKey' => 'invoiceNumber',
                     'relationName' => 'invoice',
