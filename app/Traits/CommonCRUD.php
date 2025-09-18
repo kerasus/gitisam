@@ -88,7 +88,7 @@ trait CommonCRUD
             $attachedCollection = $this->getAttachedCollection($updatedModelQuery, $setAppends, $perPage);
             return $this->jsonResponseOk(
                 $updatedModelQuery->paginate($perPage)
-                ->setCollection($attachedCollection)
+                    ->setCollection($attachedCollection)
             );
         };
         return [
@@ -106,6 +106,8 @@ trait CommonCRUD
                 // Apply the scope only if the value is true or 1
                 if ($scopeValue === true || $scopeValue === 'true' || $scopeValue == 1) {
                     $modelQuery->$item();
+                } else if ($scopeValue !== false && $scopeValue !== 'false' && $scopeValue !== 0) {
+                    $modelQuery->$item($scopeValue);
                 }
             }
         }

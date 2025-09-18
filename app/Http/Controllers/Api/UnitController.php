@@ -324,7 +324,7 @@ class UnitController extends Controller
      * @param Unit $unit
      * @return JsonResponse
      */
-    public function sendDebtSMS(Unit $unit, $target_group): JsonResponse
+    public function sendDebtSMS(Request $request, Unit $unit, $target_group): JsonResponse
     {
         try {
             // Validate the target group
@@ -334,20 +334,7 @@ class UnitController extends Controller
                 ], Response::HTTP_BAD_REQUEST);
             }
 
-            // Check if the unit has any outstanding debt
-            if ($target_group === 'resident' && $unit->current_resident_balance >= 0) {
-                return response()->json([
-                    'بدهی برای ساکن این واجد وجود ندارد.'
-                ], Response::HTTP_BAD_REQUEST);
-            }
-            if ($target_group === 'owner' && $unit->current_owner_balance >= 0) {
-                return response()->json([
-                    'بدهی برای مالک این واجد وجود ندارد.'
-                ], Response::HTTP_BAD_REQUEST);
-            }
-
             // Fetch the first resident of the unit
-
             if ($target_group === 'resident') {
                 $user = $unit->residents()->first();
             }
@@ -357,15 +344,45 @@ class UnitController extends Controller
 
             if (!$user) {
                 return response()->json([
-                    'ساکنی برای این واحد یافت نشد.'
+                    $target_group === 'resident' ?
+                        'ساکنی برای این واحد یافت نشد.':
+                        'مالکی برای این واحد یافت نشد.'
                 ], Response::HTTP_BAD_REQUEST);
+            }
+
+            // Get optional amount from query parameter
+            $amount = $request->query('amount');
+            $smsTemplateId = '139675'; // Template ID for debt reminders
+
+            // Validate amount if provided
+            if ($amount !== null) {
+                if (!is_numeric($amount) || $amount <= 0) {
+                    return response()->json([
+                        'پیام' => 'مبلغ وارد شده نامعتبر است. باید عددی مثبت باشد.'
+                    ], Response::HTTP_BAD_REQUEST);
+                }
+                $debtAmount = (int) $amount;
+                $smsTemplateId = '334357'; // Template ID for "specified amount payment" SMS
+            } else {
+                // Otherwise, use the unit's balance
+                // Check if the unit has any outstanding debt
+                if ($target_group === 'resident' && $unit->current_resident_balance >= 0) {
+                    return response()->json([
+                        'پیام' => 'بدهی برای ساکن این واحد وجود ندارد.'
+                    ], Response::HTTP_BAD_REQUEST);
+                }
+                if ($target_group === 'owner' && $unit->current_owner_balance >= 0) {
+                    return response()->json([
+                        'پیام' => 'بدهی برای مالک این واحد وجود ندارد.'
+                    ], Response::HTTP_BAD_REQUEST);
+                }
+
+                $debtAmount = $target_group === 'resident' ? $unit->current_resident_balance : $unit->current_owner_balance;
             }
 
             // Convert the current date to Jalali (Shamsi) format
             $jalaliService = new JalaliService();
             $shamsiDate = $jalaliService->toJalali();
-
-            $debtAmount = $target_group === 'resident' ? $unit->current_resident_balance : $unit->current_owner_balance;
 
             // Prepare the message parameters
             $parameters = [
@@ -382,6 +399,10 @@ class UnitController extends Controller
                     'value' => number_format($debtAmount * -1),
                 ],
                 [
+                    'name' => 'AMOUNT',
+                    'value' => $debtAmount * -1,
+                ],
+                [
                     'name' => 'UNITID',
                     'value' => $unit->id,
                 ],
@@ -394,7 +415,7 @@ class UnitController extends Controller
             // Send the SMS using the SmsService
             $this->smsService->sendVerificationSms(
                 $user->mobile,
-                '139675', // Template ID for debt reminders
+                $smsTemplateId,
                 $parameters,
                 $unit->id
             );
