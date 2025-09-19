@@ -256,7 +256,7 @@ class TransactionController extends Controller
     /**
      * Redirect user to payment gateway via a direct link.
      */
-    public function redirectToGatewayDirect($unit_id, $target_group)
+    public function redirectToGatewayDirect(Request $request, $unit_id, $target_group)
     {
         try {
             // Validate the target group
@@ -265,6 +265,20 @@ class TransactionController extends Controller
             }
 
             $description = 'پرداخت از طریق لینک مستقیم';
+
+            // Get optional amount from query parameter
+            $amount = $request->query('amount');
+            $debtAmount = 0;
+
+            // Validate amount if provided
+            if ($amount !== null) {
+                if (!is_numeric($amount) || $amount <= 0) {
+                    return response()->json([
+                        'پیام' => 'مبلغ وارد شده نامعتبر است. باید عددی مثبت باشد.'
+                    ], \Symfony\Component\HttpFoundation\Response::HTTP_BAD_REQUEST);
+                }
+                $debtAmount = (int) $amount;
+            }
 
             // Call the common logic method
 //            $processPaymentResult = $this->processZarinpalPaymentRequest(
@@ -285,7 +299,8 @@ class TransactionController extends Controller
             return $this->processSamanGatewayPaymentRequest(
                 $unit_id,
                 $target_group,
-                $description
+                $description,
+                $debtAmount
             );
 
         } catch (\Exception $e) {

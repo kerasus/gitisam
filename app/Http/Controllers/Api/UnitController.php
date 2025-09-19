@@ -400,7 +400,7 @@ class UnitController extends Controller
                 ],
                 [
                     'name' => 'AMOUNT',
-                    'value' => $debtAmount * -1,
+                    'value' => $debtAmount,
                 ],
                 [
                     'name' => 'UNITID',
