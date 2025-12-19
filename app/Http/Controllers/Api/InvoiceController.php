@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api;
 
 use App\Models\Invoice;
+use App\Models\InvoiceCategory;
 use App\Traits\Filter;
 use App\Traits\CommonCRUD;
 use Illuminate\Http\Request;
@@ -40,6 +41,7 @@ class InvoiceController extends Controller
             'filterKeysExact'=> [
                 'target_group',
                 'invoice_category_id',
+                'is_covered_by_monthly_charge',
             ],
             'eagerLoads' => [
                 'invoiceCategory'
@@ -196,6 +198,31 @@ class InvoiceController extends Controller
             return response()->json([
                 'error' => 'An unexpected error occurred while detaching the image from the invoice.',
             ], Response::HTTP_INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    public function getTotalExpensesByCategory(): JsonResponse
+    {
+        try {
+            // Fetch all invoice categories with their related invoices
+            $categories = InvoiceCategory::with('invoices')->get();
+
+            // Calculate total expenses for each category
+            $result = $categories->map(function ($category) {
+                $totalPaidAmount = $category->invoices->sum('paid_amount');
+                return [
+                    'category_name' => $category->name,
+                    'total_paid_amount' => $totalPaidAmount,
+                    'total_amount' => $category->invoices->sum('amount'), // Optional: total amount of invoices
+                ];
+            });
+
+            return response()->json($result, 200);
+        } catch (\Exception $e) {
+            \Log::error("Error fetching total expenses by category: " . $e->getMessage());
+            return response()->json([
+                'error' => 'An unexpected error occurred while fetching total expenses.',
+            ], 500);
         }
     }
 }

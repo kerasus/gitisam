@@ -50,16 +50,6 @@ Route::get('/transactions/{transaction}/public-data', [TransactionController::cl
 Route::middleware('auth:sanctum')->group(function () {
     Route::post('/users/{user_id}/reset-password', [AuthController::class, 'resetPassword'])->name('users.reset.password');
 
-    Route::resource('units', UnitController::class);
-    Route::resource('users', '\\'.UserController::class);
-    Route::resource('invoices', '\\'.InvoiceController::class);
-    Route::resource('buildings', '\\'.BuildingController::class);
-    Route::resource('unit-users', '\\'.UnitUserController::class);
-    Route::resource('transactions', '\\' . TransactionController::class);
-    Route::resource('invoice-categories', '\\'.InvoiceCategoryController::class);
-    Route::resource('invoice-distributions', '\\'.InvoiceDistributionController::class);
-
-
     Route::post('/users/{userId}/assign-role', [UserController::class, 'assignRole']);
     Route::post('/users/{userId}/remove-role', [UserController::class, 'removeRole']);
 
@@ -72,6 +62,7 @@ Route::middleware('auth:sanctum')->group(function () {
 
     Route::post('/invoices/{invoiceId}/attach-image', [InvoiceController::class, 'attachImageToInvoice'])
         ->name('invoices.attachImage');
+    Route::get('/invoices/total-expenses-by-category', [InvoiceController::class, 'getTotalExpensesByCategory']);
     Route::delete('/invoices/{invoiceId}/detach-image/{imageId}', [InvoiceController::class, 'detachImageFromInvoice'])
         ->name('invoices.detachImage');
 
@@ -95,4 +86,13 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/verify-mobile', [AuthController::class, 'verifyMobile']);
 
     Route::post('/database/backup', [DatabaseBackupController::class, 'backupDatabase']);
+
+    Route::resource('units', UnitController::class);
+    Route::resource('users', '\\'.UserController::class);
+    Route::resource('invoices', '\\'.InvoiceController::class);
+    Route::resource('buildings', '\\'.BuildingController::class);
+    Route::resource('unit-users', '\\'.UnitUserController::class);
+    Route::resource('transactions', '\\' . TransactionController::class);
+    Route::resource('invoice-categories', '\\'.InvoiceCategoryController::class);
+    Route::resource('invoice-distributions', '\\'.InvoiceDistributionController::class);
 });
