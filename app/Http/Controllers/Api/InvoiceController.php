@@ -207,10 +207,14 @@ class InvoiceController extends Controller
             // Fetch all invoice categories with their related invoices
             $categories = InvoiceCategory::with('invoices')->get();
 
+            $mounthleChargeCategoryId = 4;
+
             // Calculate total expenses for each category
-            $result = $categories->map(function ($category) {
+            $result = $categories->map(function ($category) use ($mounthleChargeCategoryId) {
                 $totalPaidAmount = $category->invoices->sum('paid_amount');
                 return [
+                    'is_mounthly_charge' => $category->id === $mounthleChargeCategoryId,
+                    'category_id' => $category->id,
                     'category_name' => $category->name,
                     'total_paid_amount' => $totalPaidAmount,
                     'total_amount' => $category->invoices->sum('amount'), // Optional: total amount of invoices
