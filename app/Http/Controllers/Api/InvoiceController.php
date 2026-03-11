@@ -213,7 +213,7 @@ class InvoiceController extends Controller
             $result = $categories->map(function ($category) use ($mounthleChargeCategoryId) {
                 $totalPaidAmount = $category->invoices->sum('paid_amount');
                 return [
-                    'is_mounthly_charge' => $category->id === $mounthleChargeCategoryId,
+                    'is_monthly_charge' => $category->id === $mounthleChargeCategoryId,
                     'category_id' => $category->id,
                     'category_name' => $category->name,
                     'total_paid_amount' => $totalPaidAmount,
