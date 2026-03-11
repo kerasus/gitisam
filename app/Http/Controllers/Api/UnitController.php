@@ -318,10 +318,13 @@ class UnitController extends Controller
         return response()->json($unit);
     }
 
+
     /**
      * Send a debt reminder SMS for a specific unit.
      *
+     * @param Request $request
      * @param Unit $unit
+     * @param string $target_group
      * @return JsonResponse
      */
     public function sendDebtSMS(Request $request, Unit $unit, $target_group): JsonResponse
@@ -334,20 +337,37 @@ class UnitController extends Controller
                 ], Response::HTTP_BAD_REQUEST);
             }
 
-            // Fetch the first resident of the unit
-            if ($target_group === 'resident') {
-                $user = $unit->residents()->first();
-            }
-            if ($target_group === 'owner') {
-                $user = $unit->owners()->first();
-            }
+            // Get optional user_id from query parameter
+            $requestedUserId = $request->query('user_id');
+            $user = null;
 
-            if (!$user) {
-                return response()->json([
-                    $target_group === 'resident' ?
-                        'ساکنی برای این واحد یافت نشد.':
-                        'مالکی برای این واحد یافت نشد.'
-                ], Response::HTTP_BAD_REQUEST);
+            // Determine the user based on the presence of user_id
+            if ($requestedUserId) {
+                // If user_id is provided, find the user in the specific relation
+                // We check if the user belongs to the unit and has the correct role
+                $relation = $target_group === 'resident' ? $unit->residents() : $unit->owners();
+                $user = $relation->where('users.id', $requestedUserId)->first();
+
+                if (!$user) {
+                    return response()->json([
+                        'پیام' => 'کاربر با شناسه داده شده در گروه ' . $target_group . ' برای این واحد یافت نشد.'
+                    ], Response::HTTP_BAD_REQUEST);
+                }
+            } else {
+                // If user_id is NOT provided, fetch the first user from the group (default behavior)
+                if ($target_group === 'resident') {
+                    $user = $unit->residents()->first();
+                } else {
+                    $user = $unit->owners()->first();
+                }
+
+                if (!$user) {
+                    return response()->json([
+                        $target_group === 'resident' ?
+                            'ساکنی برای این واحد یافت نشد.' :
+                            'مالکی برای این واحد یافت نشد.'
+                    ], Response::HTTP_BAD_REQUEST);
+                }
             }
 
             // Get optional amount from query parameter
@@ -563,20 +583,48 @@ class UnitController extends Controller
     }
 
     /**
-     * Detach a user from a unit.
+     * Detach a user from a unit based on role.
      *
+     * @param Request $request
      * @param int $unitId
      * @param int $userId
      * @return JsonResponse
      */
-    public function detachUser(int $unitId, int $userId): JsonResponse
+    public function detachUser(Request $request, int $unitId, int $userId): JsonResponse
     {
+        // Validate the request data
+        $request->validate([
+            'role' => 'required|in:resident,owner',  // Role must be either "resident" or "owner"
+        ]);
+
         try {
             // Find the unit by ID
             $unit = Unit::findOrFail($unitId);
 
-            // Detach the user from the unit
-            $unit->users()->detach($userId);
+            // Get the role from the request
+            $role = $request->input('role');
+
+            // Check if the user is actually attached to the unit with the specified role
+            $isAttached = $unit->users()
+                ->where('user_id', $userId)
+                ->wherePivot('role', $role)
+                ->exists();
+
+            if (!$isAttached) {
+                return response()->json([
+                    'message' => 'خطا در اعتبارسنجی.',
+                    'errors' => [
+                        'user_id' => [
+                            'کاربر با نقش ' . $role . ' به این واحد متصل نیست.',
+                        ],
+                    ],
+                ], Response::HTTP_BAD_REQUEST);
+            }
+
+
+            // Detach the user from the unit with the specified role
+            // Using wherePivot ensures we only remove the specific relationship record
+            $unit->users()->wherePivot('role', $role)->detach($userId);
 
             return response()->json([
                 'message' => 'کاربر با موفقیت از واحد جدا شد.',
@@ -587,7 +635,7 @@ class UnitController extends Controller
 
             return response()->json([
                 'error' => 'An unexpected error occurred while detaching the user from the unit.',
-            ], 500);
+            ], Response::HTTP_INTERNAL_SERVER_ERROR);
         }
     }
 }

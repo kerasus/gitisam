@@ -46,6 +46,7 @@ return [
     'attributes' => [
         'name' => 'نام',
         'amount' => 'مقدار',
+        'role' => 'نقش',
         'payment_method' => 'روش پرداخت',
         'distribution_method' => 'روش توزیع',
         'building_id' => 'ساختمان',

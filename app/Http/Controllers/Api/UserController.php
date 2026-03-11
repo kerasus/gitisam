@@ -106,6 +106,15 @@ class UserController extends Controller
                     'relationColumn' => 'transaction_status'
                 ]
             ],
+            'filterOnMultipleColumnKeys' => [
+                [
+                    'requestKey' => 'full_name',
+                    'columns' => [
+                        'firstname',
+                        'lastname',
+                    ]
+                ],
+            ],
             'eagerLoads' => [
                 'units'
             ]
