@@ -151,7 +151,7 @@ class UserController extends Controller
      */
     public function show(int $id): JsonResponse
     {
-        $user = User::findOrFail($id);
+        $user = User::with(['units'])->findOrFail($id);
 
         return $this->jsonResponseOk($user);
     }
