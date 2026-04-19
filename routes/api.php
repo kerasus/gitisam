@@ -28,6 +28,7 @@ use App\Http\Controllers\Api\InvoiceDistributionController;
 Route::get('/test', [AuthController::class, 'test']);
 Route::post('/register', [AuthController::class, 'register']);
 Route::post('/login', [AuthController::class, 'login']);
+Route::get('clear', [AuthController::class, 'clear']);
 
 Route::get('/units/publicIndex', [UnitController::class, 'publicIndex']);
 // Public route for direct payment link

@@ -2,9 +2,7 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Model;
-
-class SmsMessage extends Model
+class SmsMessage extends BaseModel
 {
     protected $fillable = [
         'unit_id',

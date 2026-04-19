@@ -5,11 +5,10 @@ namespace App\Models;
 use App\Enums\InvoiceStatus;
 use App\Enums\InvoiceType;
 use App\Enums\TargetGroup;
-use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\MorphMany;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 
-class Invoice extends Model
+class Invoice extends BaseModel
 {
     use HasFactory;
 

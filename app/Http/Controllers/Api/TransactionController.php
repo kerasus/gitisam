@@ -127,8 +127,9 @@ class TransactionController extends Controller
         $transactionData = [
             'unit_id' => $request->input('unit_id'),
             'amount' => $request->input('amount'),
-            'payment_method' => $request->input('payment_method'),
+            'description' => $request->input('description'),
             'target_group' => $request->input('target_group'),
+            'payment_method' => $request->input('payment_method'),
             'authority' => $request->input('authority'),
             'transactionID' => $request->input('transactionID'),
             'transaction_status' => $request->input('transaction_status'),
@@ -258,6 +259,56 @@ class TransactionController extends Controller
      */
     public function redirectToGatewayDirect(Request $request, $unit_id, $target_group)
     {
+//        // 🔒 موقتاً غیرفعال برای بروزرسانی بخش پرداخت
+//        $html = <<<HTML
+//        <!DOCTYPE html>
+//        <html lang="fa" dir="rtl">
+//        <head>
+//            <meta charset="UTF-8">
+//            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+//            <title>سامانه پرداخت موقتاً غیرفعال است</title>
+//            <style>
+//                body {
+//                    font-family: "Vazirmatn", "IRANSans", sans-serif;
+//                    background-color: #f8fafc;
+//                    color: #333;
+//                    text-align: center;
+//                    padding: 60px 20px;
+//                }
+//                .container {
+//                    max-width: 600px;
+//                    margin: auto;
+//                    background: #fff;
+//                    border-radius: 12px;
+//                    box-shadow: 0 2px 15px rgba(0,0,0,0.1);
+//                    padding: 40px 30px;
+//                }
+//                h1 {
+//                    color: #d9534f;
+//                    font-size: 1.6rem;
+//                    margin-bottom: 20px;
+//                }
+//                p {
+//                    font-size: 1rem;
+//                    line-height: 1.8;
+//                }
+//            </style>
+//        </head>
+//        <body>
+//            <div class="container">
+//                <h1>پرداخت موقتاً غیرفعال است</h1>
+//                <p>
+//                    کاربر گرامی، سامانه پرداخت آنلاین در حال بروزرسانی و رفع برخی مشکلات فنی است.<br>
+//                    لطفاً در زمان دیگری مجدداً تلاش نمایید.
+//                </p>
+//            </div>
+//        </body>
+//        </html>
+//    HTML;
+//
+//        return response($html, \Symfony\Component\HttpFoundation\Response::HTTP_OK)
+//            ->header('Content-Type', 'text/html; charset=utf-8');
+
         try {
             // Validate the target group
             if (!in_array($target_group, ['resident', 'owner'])) {
@@ -547,14 +598,19 @@ class TransactionController extends Controller
             $updateTransactionData = $result['update_transaction'];
             $samanTransaction = $result['transaction_saman'];
             $updateSamanTransactionData = $result['update_transaction_saman'];
-            $samanTransaction->update($updateSamanTransactionData);
+            if ($samanTransaction && $updateSamanTransactionData) {
+                $samanTransaction->update($updateSamanTransactionData);
+            }
 
             if ($result['status'] === 'paid') {
                 $status = true;
             }
         }
 
-        $transaction->update($updateTransactionData);
+        if ($transaction && $updateTransactionData) {
+            $transaction->update($updateTransactionData);
+        }
+
         if ($status) {
             return redirect($this->getRouteOfPublicTransactionPageInClient($transaction->id, 'success'));
         } else {
@@ -649,6 +705,7 @@ class TransactionController extends Controller
     }
 
     private function handleCallback_saman (Request $request) {
+        $token = $request->input('Token');
         $refNum = $request->input('RefNum');
         $resNum = $request->input('ResNum');
         $traceNo = $request->input('TraceNo');
@@ -728,11 +785,24 @@ class TransactionController extends Controller
                 ];
             }
         } catch (\Exception $e) {
-            // Log the error and redirect to a failure page
-//            \Log::error('saman callback error: ' . $e->getMessage());
+            \Log::error('saman callback exception: '.$e->getMessage(), [
+                'refNum' => $refNum,
+                'line' => $e->getLine(),
+                'file' => $e->getFile(),
+                'trace' => $e->getTraceAsString(),
+                'inputs' => $request->all()
+            ]);
 
             // Redirect to a hash-based URL with failure status
-            return redirect($this->getRouteOfPublicTransactionPageInClient($transaction->id, 'failed'));
+            return [
+                'status' => 'unsuccessful',
+                'transaction' => $transaction ?? null,
+                'update_transaction' => ['transaction_status' => 'unsuccessful'],
+                'transaction_saman' => null,
+                'update_transaction_saman' => null,
+            ];
+
+//            return redirect($this->getRouteOfPublicTransactionPageInClient($transaction->id, 'failed'));
         }
     }
 

@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use DateTimeInterface;
 use Laravel\Sanctum\HasApiTokens;
 use Spatie\Permission\Traits\HasRoles;
 use Illuminate\Notifications\Notifiable;
@@ -77,12 +78,16 @@ class User extends Authenticatable
         return $this->hasMany(Transaction::class);
     }
 
-
     /**
      * Get the user's roles as an array of role names.
      */
     public function getRolesListAttribute()
     {
         return $this->getRoleNames()->toArray();
+    }
+
+    protected function serializeDate(DateTimeInterface $date)
+    {
+        return $date->setTimezone('Asia/Tehran')->format('Y-m-d H:i:s');
     }
 }

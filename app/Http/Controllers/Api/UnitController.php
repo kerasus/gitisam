@@ -292,14 +292,19 @@ class UnitController extends Controller
     public function getBalance(int $id): JsonResponse
     {
         $unit = Unit::select([
-            'building_id',
             'unit_number',
             'resident_base_balance',
-            'owner_base_balance',
-            'paid_amount',
-            'owner_debt',
             'resident_debt',
-            'total_debt'])->findOrFail($id);
+            'resident_paid_amount',
+            'owner_base_balance',
+            'owner_debt',
+            'owner_paid_amount'
+        ])
+            ->with([
+                'residents',
+                'owners'
+            ])
+            ->findOrFail($id);
 
         return $this->jsonResponseOk($unit);
     }

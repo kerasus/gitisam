@@ -2,19 +2,42 @@
 
 namespace App\Http\Controllers\Api;
 
+use Carbon\Carbon;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Artisan;
 use Illuminate\Validation\ValidationException;
-use Symfony\Component\HttpFoundation\Response;
 
 class AuthController extends Controller
 {
     public function __construct()
     {
         $this->middleware('role:Manager')->only(['resetPassword']);
+    }
+
+    public function test(Request $request): JsonResponse
+    {
+//        dd(config('app.timezone'));
+//
+//        dd(\DB::select('SELECT NOW() as now_db, @@session.time_zone as db_tz'));
+
+        return response()->json([
+            'now_php'    => date('Y-m-d H:i:s'),
+            'now_carbon' => Carbon::now()->toDateTimeString(),
+            'timezone'   => config('app.timezone'),
+        ], 200);
+    }
+
+    public function clear(): JsonResponse
+    {
+        Artisan::call('optimize:clear');
+
+        return response()->json([
+            'message' => 'Laravel cache cleared'
+        ]);
     }
 
     /**
